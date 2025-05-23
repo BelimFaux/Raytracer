@@ -1,6 +1,4 @@
-use math::Color;
-
-mod math;
+use lab3::math::Color;
 
 fn main() {
     let width = 256;

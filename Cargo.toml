@@ -3,6 +3,10 @@ name = "lab3"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "lab3"
+path = "src/lib.rs"
+
 [dependencies]
 image = "0.25.6"
 quick-xml = "0.37.5"
