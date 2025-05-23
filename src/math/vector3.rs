@@ -156,6 +156,7 @@ impl ops::DivAssign<f32> for Vector3 {
 
 // --- Tests ---
 
+#[cfg(test)]
 mod test {
     use super::*;
 
