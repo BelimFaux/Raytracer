@@ -12,10 +12,10 @@ impl Sphere {
 
     pub fn intersection(&self, with: &Ray) -> bool {
         let oc = self.center - *with.orig();
-        let a = with.dir().dot(with.dir());
-        let b = -2. * with.dir().dot(&oc);
+        let a = with.dir().dot(&oc);
+        let b = with.dir().dot(with.dir());
         let c = oc.dot(&oc) - self.radius * self.radius;
-        let discr = b * b - 4. * a * c;
+        let discr = a * a - b * c;
         discr >= 0.
     }
 }

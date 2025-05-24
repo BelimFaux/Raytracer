@@ -1,29 +1,27 @@
 use lab3::{
-    math::{Point3, Ray, Vector3},
-    scene::sphere::Sphere,
+    math::{Point3, Vector3},
+    scene::{Camera, Sphere},
 };
 
-const WIDTH: u32 = 256;
-const HEIGHT: u32 = 256;
-const ASPECT: f32 = HEIGHT as f32 / WIDTH as f32;
-const FOV_X: f32 = std::f32::consts::FRAC_PI_4;
-const FOV_Y: f32 = FOV_X * ASPECT;
-
-fn get_cam_ray(u: u32, v: u32) -> Ray {
-    let x = ((2 * u as i32) - WIDTH as i32) as f32 / WIDTH as f32 * FOV_X.tan();
-    let y = ((2 * v as i32) - HEIGHT as i32) as f32 / HEIGHT as f32 * FOV_Y.tan();
-    let mut dir = Vector3::new(x, y, -1.);
-    dir.normalize();
-    Ray::new(Point3::zero(), dir)
-}
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
 
 fn main() {
     let mut imgbuf = image::ImageBuffer::new(WIDTH, HEIGHT);
 
+    let camera = Camera::new(
+        Point3::new(0., 0., 0.),
+        Vector3::new(0., 0., -1.),
+        Vector3::new(0., 1., 0.),
+        std::f32::consts::FRAC_PI_4,
+        WIDTH,
+        HEIGHT,
+    );
+
     let sphere = Sphere::new(Point3::new(0., 0., -2.), 0.5);
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        let ray = get_cam_ray(x, y);
+        let ray = camera.get_ray_through(x, y);
 
         if sphere.intersection(&ray) {
             *pixel = image::Rgb([255u8, 255u8, 255u8]);

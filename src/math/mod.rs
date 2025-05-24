@@ -1,3 +1,5 @@
+//! math module
+
 mod ray;
 mod vector3;
 
