@@ -1,4 +1,7 @@
-use lab3::math::{Point3, Ray, Vector3};
+use lab3::{
+    math::{Point3, Ray, Vector3},
+    scene::sphere::Sphere,
+};
 
 const WIDTH: u32 = 256;
 const HEIGHT: u32 = 256;
@@ -17,12 +20,21 @@ fn get_cam_ray(u: u32, v: u32) -> Ray {
 fn main() {
     let mut imgbuf = image::ImageBuffer::new(WIDTH, HEIGHT);
 
+    let sphere = Sphere::new(Point3::new(0., 0., -2.), 0.5);
+
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let ray = get_cam_ray(x, y);
+
+        if sphere.intersection(&ray) {
+            *pixel = image::Rgb([255u8, 255u8, 255u8]);
+            continue;
+        }
+
         let mut dir = *ray.dir();
         // scale back into 0..1
         dir += Vector3::new(1., 1., 1.);
         dir *= 0.5;
+
         *pixel = dir.to_rgb();
     }
 

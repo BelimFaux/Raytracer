@@ -20,6 +20,10 @@ impl Ray {
     pub fn dir(&self) -> &Vector3 {
         &self.direction
     }
+
+    pub fn orig(&self) -> &Vector3 {
+        &self.origin
+    }
 }
 
 // --- Tests ---
