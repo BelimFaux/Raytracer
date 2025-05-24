@@ -3,8 +3,9 @@ use lab3::{
     scene::{Camera, Sphere},
 };
 
-const WIDTH: u32 = 256;
-const HEIGHT: u32 = 256;
+const WIDTH: u32 = 1920;
+const HEIGHT: u32 = 1080;
+const FOV_X: f32 = std::f32::consts::FRAC_PI_4;
 
 fn main() {
     let mut imgbuf = image::ImageBuffer::new(WIDTH, HEIGHT);
@@ -13,12 +14,12 @@ fn main() {
         Point3::new(0., 0., 0.),
         Vector3::new(0., 0., -1.),
         Vector3::new(0., 1., 0.),
-        std::f32::consts::FRAC_PI_4,
+        FOV_X,
         WIDTH,
         HEIGHT,
     );
 
-    let sphere = Sphere::new(Point3::new(0., 0., -2.), 0.5);
+    let sphere = Sphere::new(Point3::new(0., 0., -3.), 1.0);
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let ray = camera.get_ray_through(x, y);

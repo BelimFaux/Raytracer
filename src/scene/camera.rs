@@ -5,8 +5,8 @@ pub struct Camera {
     center: Point3,
     height: f32,
     width: f32,
-    fov_tx: f32,
-    fov_ty: f32,
+    fov_t: f32,
+    aspect: f32,
 }
 
 impl Camera {
@@ -18,21 +18,21 @@ impl Camera {
         horizontal: u32,
         vertical: u32,
     ) -> Camera {
-        let fov_y = (vertical as f32 / horizontal as f32) * fov_x;
-        let fov_tx = fov_x.tan();
-        let fov_ty = fov_y.tan();
+        let aspect = vertical as f32 / horizontal as f32;
+        let fov_t = fov_x.tan();
         Camera {
             center: pos,
             height: vertical as f32,
             width: horizontal as f32,
-            fov_tx,
-            fov_ty,
+            fov_t,
+            aspect,
         }
     }
 
     pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
-        let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_tx;
-        let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_ty;
+        let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
+        let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;
+
         let mut dir = Vector3::new(x, y, -1.);
         dir.normalize();
 
