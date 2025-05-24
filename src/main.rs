@@ -3,8 +3,8 @@ use lab3::{
     scene::{Camera, Sphere},
 };
 
-const WIDTH: u32 = 1920;
-const HEIGHT: u32 = 1080;
+const WIDTH: u32 = 256;
+const HEIGHT: u32 = 256;
 
 fn main() {
     let mut imgbuf = image::ImageBuffer::new(WIDTH, HEIGHT);
@@ -23,17 +23,13 @@ fn main() {
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         let ray = camera.get_ray_through(x, y);
 
-        if sphere.intersection(&ray) {
-            *pixel = image::Rgb([255u8, 255u8, 255u8]);
-            continue;
-        }
-
-        let mut dir = *ray.dir();
-        // scale back into 0..1
-        dir += Vector3::new(1., 1., 1.);
-        dir *= 0.5;
-
-        *pixel = dir.to_rgb();
+        *pixel = match sphere.intersection(&ray) {
+            Some(intersection) => {
+                let dir = (intersection.normal + Vector3::new(1., 1., 1.)) * 0.5;
+                dir.to_rgb()
+            }
+            None => image::Rgb([0u8, 0u8, 0u8]),
+        };
     }
 
     imgbuf.save("output/test.png").unwrap();
