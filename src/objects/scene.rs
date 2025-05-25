@@ -57,7 +57,7 @@ impl Scene {
             Some(intersection) => {
                 let mut col = Color::zero();
                 for light in self.lights.iter() {
-                    col += intersection.get_color(light)
+                    col += intersection.get_color(light, &ray)
                 }
                 col
             }

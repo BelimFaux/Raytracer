@@ -21,13 +21,9 @@ pub type Color = Vector3;
 impl Color {
     /// Convert a color with value in range 0 to 1 to an RGB value with values from 0 to 255
     pub fn to_rgb(self) -> image::Rgb<u8> {
-        debug_assert!((0.0..=1.0).contains(&self.x));
-        debug_assert!((0.0..=1.0).contains(&self.y));
-        debug_assert!((0.0..=1.0).contains(&self.z));
-
-        let r = (255.999 * self.x) as u8;
-        let g = (255.999 * self.y) as u8;
-        let b = (255.999 * self.z) as u8;
+        let r = (255.999 * self.x.clamp(0.0, 1.0)) as u8;
+        let g = (255.999 * self.y.clamp(0.0, 1.0)) as u8;
+        let b = (255.999 * self.z.clamp(0.0, 1.0)) as u8;
         image::Rgb([r, g, b])
     }
 }
@@ -36,6 +32,15 @@ impl Vector3 {
     /// Create a new Vector from 3 floats
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3 { x, y, z }
+    }
+
+    pub fn normal(from: &Vector3) -> Vector3 {
+        let length = from.length();
+        Vector3 {
+            x: from.x / length,
+            y: from.y / length,
+            z: from.z / length,
+        }
     }
 
     /// Creates a Vector with all components = 0
@@ -75,6 +80,12 @@ impl Vector3 {
     /// normalize the vector
     pub fn normalize(&mut self) {
         *self /= self.length();
+    }
+
+    /// calculate the reflection direction from the given incident vector `i` and the normal `n`
+    /// `i - 2.0 * dot(n, i) * n`
+    pub fn reflect(i: &Vector3, n: &Vector3) -> Vector3 {
+        *i - 2.0 * n.dot(i) * *n
     }
 }
 

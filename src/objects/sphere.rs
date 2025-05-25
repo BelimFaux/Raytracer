@@ -1,4 +1,4 @@
-use crate::math::{Color, Point3, Ray, Vector3};
+use crate::math::{max, Color, Point3, Ray, Vector3};
 
 use super::Light;
 
@@ -10,8 +10,9 @@ pub struct Intersection<'a> {
 }
 
 impl Intersection<'_> {
-    pub fn get_color(&self, light: &Light) -> Color {
-        self.material.get_color(&self.point, &self.normal, light)
+    pub fn get_color(&self, light: &Light, ray: &Ray) -> Color {
+        self.material
+            .get_color(&self.point, &self.normal, light, ray)
     }
 }
 
@@ -75,17 +76,30 @@ impl Material {
         }
     }
 
-    pub fn get_color(&self, _point: &Point3, _normal: &Vector3, light: &Light) -> Color {
+    fn phong(
+        &self,
+        color: &Color,
+        vlight: &Vector3,
+        vnormal: &Vector3,
+        neg_veye: &Vector3,
+    ) -> Color {
+        let l = Vector3::normal(vlight);
+        let n = Vector3::normal(vnormal);
+        let diffuse = self.color * self.kd * max(l.dot(&n), 0.0);
+        let r = Vector3::reflect(&l, &n);
+        let e = -Vector3::normal(neg_veye);
+        let specular = *color * self.ks * max(e.dot(&r), 0.0).powf(self.exp as f32);
+        diffuse + specular
+    }
+
+    pub fn get_color(&self, point: &Point3, normal: &Vector3, light: &Light, ray: &Ray) -> Color {
         match light {
             Light::Ambient { color: _ } => self.color * self.ka,
-            Light::Parallel {
-                color: _,
-                direction: _,
-            } => self.color,
-            Light::Point {
-                color: _,
-                position: _,
-            } => self.color,
+            Light::Parallel { color, direction } => self.phong(color, direction, normal, ray.dir()),
+            Light::Point { color, position } => {
+                let dir = *position - *point;
+                self.phong(color, &dir, normal, ray.dir())
+            }
         }
     }
 }
