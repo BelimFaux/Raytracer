@@ -9,4 +9,5 @@ path = "src/lib.rs"
 
 [dependencies]
 image = "0.25.6"
-quick-xml = "0.37.5"
+quick-xml = { version = "0.37.5", features = ["serialize"] }
+serde = { version = "1.0.219", features = ["derive"] }

@@ -15,6 +15,7 @@ impl Intersection<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct Sphere {
     center: Point3,
     radius: f32,
@@ -60,11 +61,11 @@ pub struct Material {
     ka: f32,
     kd: f32,
     ks: f32,
-    exp: i32,
+    exp: u32,
 }
 
 impl Material {
-    pub fn new(color: Color, ka: f32, kd: f32, ks: f32, exp: i32) -> Material {
+    pub fn new(color: Color, ka: f32, kd: f32, ks: f32, exp: u32) -> Material {
         Material {
             color,
             ka,

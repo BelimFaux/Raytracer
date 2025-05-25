@@ -29,6 +29,10 @@ impl Camera {
         }
     }
 
+    pub fn get_dimensions(&self) -> (u32, u32) {
+        (self.width as u32, self.height as u32)
+    }
+
     pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
         let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
         let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;

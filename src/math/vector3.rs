@@ -1,8 +1,16 @@
+use serde::Deserialize;
 use std::ops;
 
 /// Struct to represent a 3D-Vector
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Vector3(f32, f32, f32);
+#[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
+pub struct Vector3 {
+    #[serde(rename = "@x", alias = "@r")]
+    x: f32,
+    #[serde(rename = "@y", alias = "@g")]
+    y: f32,
+    #[serde(rename = "@z", alias = "@b")]
+    z: f32,
+}
 
 /// A point in 3D space
 pub type Point3 = Vector3;
@@ -13,13 +21,13 @@ pub type Color = Vector3;
 impl Color {
     /// Convert a color with value in range 0 to 1 to an RGB value with values from 0 to 255
     pub fn to_rgb(self) -> image::Rgb<u8> {
-        debug_assert!((0.0..=1.0).contains(&self.0));
-        debug_assert!((0.0..=1.0).contains(&self.1));
-        debug_assert!((0.0..=1.0).contains(&self.2));
+        debug_assert!((0.0..=1.0).contains(&self.x));
+        debug_assert!((0.0..=1.0).contains(&self.y));
+        debug_assert!((0.0..=1.0).contains(&self.z));
 
-        let r = (255.999 * self.0) as u8;
-        let g = (255.999 * self.1) as u8;
-        let b = (255.999 * self.2) as u8;
+        let r = (255.999 * self.x) as u8;
+        let g = (255.999 * self.y) as u8;
+        let b = (255.999 * self.z) as u8;
         image::Rgb([r, g, b])
     }
 }
@@ -27,26 +35,30 @@ impl Color {
 impl Vector3 {
     /// Create a new Vector from 3 floats
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
-        Vector3(x, y, z)
+        Vector3 { x, y, z }
     }
 
     /// Creates a Vector with all components = 0
     pub fn zero() -> Vector3 {
-        Vector3(0., 0., 0.)
+        Vector3 {
+            x: 0.,
+            y: 0.,
+            z: 0.,
+        }
     }
 
     /// computes the dot product
     pub fn dot(&self, rhs: &Vector3) -> f32 {
-        self.0 * rhs.0 + self.1 * rhs.1 + self.2 * rhs.2
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     /// computes the cross product of self x rhs (not commutative)
     pub fn cross(&self, rhs: &Vector3) -> Vector3 {
-        Vector3(
-            self.1 * rhs.2 - self.2 * rhs.1,
-            self.2 * rhs.0 - self.0 * rhs.2,
-            self.0 * rhs.1 - self.1 * rhs.0,
-        )
+        Vector3 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+        }
     }
 
     /// returnes the length of the vector
@@ -57,7 +69,7 @@ impl Vector3 {
     /// returnes the square of the length of the vector
     /// more efficient for comparisons
     pub fn length_squared(&self) -> f32 {
-        self.0 * self.0 + self.1 * self.1 + self.2 * self.2
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     /// normalize the vector
@@ -72,15 +84,19 @@ impl ops::Add for Vector3 {
     type Output = Vector3;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Vector3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+        Vector3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
     }
 }
 
 impl ops::AddAssign for Vector3 {
     fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0;
-        self.1 += rhs.1;
-        self.2 += rhs.2;
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -88,15 +104,19 @@ impl ops::Sub for Vector3 {
     type Output = Vector3;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vector3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        Vector3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
     }
 }
 
 impl ops::SubAssign for Vector3 {
     fn sub_assign(&mut self, rhs: Self) {
-        self.0 -= rhs.0;
-        self.1 -= rhs.1;
-        self.2 -= rhs.2;
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
     }
 }
 
@@ -104,7 +124,11 @@ impl ops::Neg for Vector3 {
     type Output = Vector3;
 
     fn neg(self) -> Self::Output {
-        Vector3(-self.0, -self.1, -self.2)
+        Vector3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
@@ -112,7 +136,11 @@ impl ops::Mul<f32> for Vector3 {
     type Output = Vector3;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Vector3(self.0 * rhs, self.1 * rhs, self.2 * rhs)
+        Vector3 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
     }
 }
 
@@ -126,9 +154,9 @@ impl ops::Mul<Vector3> for f32 {
 
 impl ops::MulAssign<f32> for Vector3 {
     fn mul_assign(&mut self, rhs: f32) {
-        self.0 *= rhs;
-        self.1 *= rhs;
-        self.2 *= rhs;
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 

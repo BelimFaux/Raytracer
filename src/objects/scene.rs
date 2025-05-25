@@ -3,6 +3,7 @@ use crate::math::Color;
 use super::{sphere::Intersection, Camera, Light, Sphere};
 
 pub struct Scene {
+    output: String,
     background_color: Color,
     camera: Camera,
     lights: Vec<Light>,
@@ -11,17 +12,27 @@ pub struct Scene {
 
 impl Scene {
     pub fn new(
+        output: String,
         background_color: Color,
         camera: Camera,
         lights: Vec<Light>,
         surfaces: Vec<Sphere>,
     ) -> Scene {
         Scene {
+            output,
             background_color,
             camera,
             lights,
             surfaces,
         }
+    }
+
+    pub fn get_output(&self) -> &str {
+        &self.output
+    }
+
+    pub fn get_dimensions(&self) -> (u32, u32) {
+        self.camera.get_dimensions()
     }
 
     pub fn trace_pixel(&self, u: u32, v: u32) -> Color {
