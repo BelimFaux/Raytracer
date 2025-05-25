@@ -2,10 +2,17 @@ use crate::math::{Color, Point3, Ray, Vector3};
 
 use super::Light;
 
-pub struct Intersection {
+pub struct Intersection<'a> {
     pub point: Point3,
     pub t: f32,
     pub normal: Vector3,
+    pub material: &'a Material,
+}
+
+impl Intersection<'_> {
+    pub fn get_color(&self, light: &Light) -> Color {
+        self.material.get_color(&self.point, &self.normal, light)
+    }
 }
 
 pub struct Sphere {
@@ -42,15 +49,12 @@ impl Sphere {
             point: p,
             t,
             normal: n,
+            material: &self.material,
         })
-    }
-
-    pub fn intersection_color(&self, intersection: &Intersection, light: &Light) -> Color {
-        self.material
-            .get_color(&intersection.point, &intersection.normal, light)
     }
 }
 
+#[derive(Clone)]
 pub struct Material {
     color: Color,
     ka: f32,
