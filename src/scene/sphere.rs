@@ -1,4 +1,6 @@
-use crate::math::{Point3, Ray, Vector3};
+use crate::math::{Color, Point3, Ray, Vector3};
+
+use super::Light;
 
 pub struct Intersection {
     pub point: Point3,
@@ -9,11 +11,16 @@ pub struct Intersection {
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Sphere {
-        Sphere { center, radius }
+    pub fn new(center: Point3, radius: f32, material: Material) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 
     pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
@@ -37,6 +44,45 @@ impl Sphere {
             normal: n,
         })
     }
+
+    pub fn intersection_color(&self, intersection: &Intersection, light: &Light) -> Color {
+        self.material
+            .get_color(&intersection.point, &intersection.normal, light)
+    }
+}
+
+pub struct Material {
+    color: Color,
+    ka: f32,
+    kd: f32,
+    ks: f32,
+    exp: i32,
+}
+
+impl Material {
+    pub fn new(color: Color, ka: f32, kd: f32, ks: f32, exp: i32) -> Material {
+        Material {
+            color,
+            ka,
+            kd,
+            ks,
+            exp,
+        }
+    }
+
+    pub fn get_color(&self, _point: &Point3, _normal: &Vector3, light: &Light) -> Color {
+        match light {
+            Light::Ambient { color: _ } => self.color * self.ka,
+            Light::Parallel {
+                color: _,
+                direction: _,
+            } => self.color,
+            Light::Point {
+                color: _,
+                position: _,
+            } => self.color,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -47,7 +93,11 @@ mod tests {
 
     #[test]
     fn sphere_intersection_test() {
-        let sphere = Sphere::new(Point3::new(0., 0., -1.), 0.5);
+        let sphere = Sphere::new(
+            Point3::new(0., 0., -1.),
+            0.5,
+            Material::new(Color::new(0., 0., 0.), 0., 0., 0., 1),
+        );
 
         let two_hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
         assert!(sphere.intersection(&two_hit).is_some());
