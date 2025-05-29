@@ -1,7 +1,19 @@
-use lab3::input::file_to_scene;
+use std::{env, process};
+
+use lab3::input::{file_to_scene, Config};
 
 fn main() {
-    let scene = file_to_scene("scenes/test.xml");
+    let args: Vec<_> = env::args().collect();
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        eprintln!("Error while parsing arguments:\n{err}");
+        process::exit(1);
+    });
+
+    let scene = file_to_scene(config.get_input()).unwrap_or_else(|err| {
+        eprintln!("Error while parsing file '{}':\n{err}", config.get_input());
+        process::exit(1);
+    });
+
     let (width, height) = scene.get_dimensions();
     let mut imgbuf = image::ImageBuffer::new(width, height);
 
