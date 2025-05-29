@@ -6,7 +6,6 @@ use serde::Deserialize;
 
 // --- Camera serial types ---
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct SerialCamera {
     position: Vector3,
@@ -14,17 +13,16 @@ pub(super) struct SerialCamera {
     up: Vector3,
     horizontal_fov: Fov,
     resolution: Resolution,
+    #[allow(unused)]
     max_bounces: MaxBounces,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Fov {
     #[serde(rename = "@angle")]
     angle: u32,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Resolution {
     #[serde(rename = "@horizontal")]
@@ -33,9 +31,9 @@ pub(super) struct Resolution {
     vertical: u32,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct MaxBounces {
+    #[allow(unused)]
     #[serde(rename = "@n")]
     n: u32,
 }
@@ -55,13 +53,15 @@ impl From<SerialCamera> for Camera {
 
 // --- Material serial types ---
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct MaterialSolid {
     color: Color,
     phong: Phong,
+    #[allow(unused)]
     reflectance: Reflectance,
+    #[allow(unused)]
     transmittance: Transmittance,
+    #[allow(unused)]
     refraction: Refraction,
 }
 
@@ -82,7 +82,6 @@ pub(super) struct Texture {
     name: String,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Phong {
     #[serde(rename = "@ka")]
@@ -166,7 +165,6 @@ pub(super) enum Transform {
 
 // --- Surface serial types ---
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum Surface {
@@ -175,9 +173,12 @@ pub(super) enum Surface {
         radius: f32,
         position: Vector3,
         material_solid: Option<MaterialSolid>,
+        #[allow(unused)]
         material_textured: Option<MaterialTextured>,
+        #[allow(unused)]
         transform: Option<TransformList>,
     },
+    #[allow(unused)]
     Mesh {
         #[serde(rename = "@name")]
         name: String,
@@ -211,7 +212,7 @@ impl From<Surface> for Sphere {
                     .expect("Only solid materials are implemented")
                     .into(),
             ),
-            _ => panic!("not implemented"),
+            _ => unimplemented!("Mesh's are not yet supported!"),
         }
     }
 }
@@ -227,7 +228,7 @@ pub(super) struct Falloff {
     alpha2: u32,
 }
 
-#[allow(unused, clippy::enum_variant_names)]
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum SerialLight {
@@ -242,6 +243,7 @@ pub(super) enum SerialLight {
         color: Color,
         position: Vector3,
     },
+    #[allow(unused)]
     SpotLight {
         color: Color,
         position: Vector3,
@@ -256,14 +258,13 @@ impl From<SerialLight> for Light {
             SerialLight::AmbientLight { color } => Light::Ambient { color },
             SerialLight::ParallelLight { color, direction } => Light::Parallel { color, direction },
             SerialLight::PointLight { color, position } => Light::Point { color, position },
-            SerialLight::SpotLight { .. } => panic!("Not implemented"),
+            SerialLight::SpotLight { .. } => unimplemented!("Spotlights are not supported"),
         }
     }
 }
 
 // --- Scene serial types ---
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct SerialScene {
     #[serde(rename = "@output_file")]
@@ -274,7 +275,6 @@ pub(super) struct SerialScene {
     surfaces: SurfaceList,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct LightList {
     #[serde(default)]
@@ -282,7 +282,6 @@ pub(super) struct LightList {
     lights: Vec<SerialLight>,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct SurfaceList {
     #[serde(default)]

@@ -19,7 +19,8 @@ pub type Point3 = Vector3;
 pub type Color = Vector3;
 
 impl Color {
-    /// Convert a color with value in range 0 to 1 to an RGB value with values from 0 to 255
+    /// Convert a color with values in range 0 to 1 to an RGB value with values from 0 to 255
+    /// The components get clamped at 0 and 1
     pub fn to_rgb(self) -> image::Rgb<u8> {
         let r = (255.999 * self.x.clamp(0.0, 1.0)) as u8;
         let g = (255.999 * self.y.clamp(0.0, 1.0)) as u8;
@@ -34,6 +35,7 @@ impl Vector3 {
         Vector3 { x, y, z }
     }
 
+    /// Create a normal from a vector
     pub fn normal(from: &Vector3) -> Vector3 {
         let length = from.length();
         Vector3 {

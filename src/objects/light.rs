@@ -1,5 +1,6 @@
 use crate::math::{Color, Point3, Ray, Vector3};
 
+/// Enum to represent different types of light
 #[derive(Clone)]
 pub enum Light {
     Ambient { color: Color },

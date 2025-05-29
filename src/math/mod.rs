@@ -1,4 +1,5 @@
 //! math module
+//! contains some mathematical structs and helpers
 
 mod ray;
 mod util;

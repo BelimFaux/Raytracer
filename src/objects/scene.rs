@@ -1,7 +1,8 @@
 use crate::math::{Color, Ray};
 
-use super::{sphere::Intersection, Camera, Light, Sphere};
+use super::{surface::Intersection, Camera, Light, Sphere};
 
+/// Struct to hold all data belonging to a single scene
 pub struct Scene {
     output: String,
     background_color: Color,

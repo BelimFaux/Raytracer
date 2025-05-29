@@ -1,3 +1,6 @@
+//! input module
+//! responsible for receiving and parsing input files
+
 mod arguments;
 mod serial_types;
 mod xml;

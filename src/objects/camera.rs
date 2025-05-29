@@ -1,5 +1,6 @@
 use crate::math::{Point3, Ray, Vector3};
 
+/// Struct to represent a camera in 3D space
 #[derive(Debug)]
 pub struct Camera {
     center: Point3,
@@ -10,6 +11,7 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Create a new camera
     pub fn new(
         pos: Point3,
         _lookat: Point3,
@@ -29,10 +31,12 @@ impl Camera {
         }
     }
 
+    /// Return the image dimensions of the camera
     pub fn get_dimensions(&self) -> (u32, u32) {
         (self.width as u32, self.height as u32)
     }
 
+    /// Construct a camera ray through pixel `(u, v)`
     pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
         let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
         let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;

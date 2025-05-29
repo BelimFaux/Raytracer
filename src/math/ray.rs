@@ -36,10 +36,12 @@ impl Ray {
         }
     }
 
+    /// get the direction of the ray
     pub fn dir(&self) -> &Vector3 {
         &self.direction
     }
 
+    /// get the origin of the ray
     pub fn orig(&self) -> &Vector3 {
         &self.origin
     }
@@ -59,5 +61,13 @@ mod tests {
         let expected = Point3::new(2.5, 1.5, 1.5);
 
         assert_eq!(p.unwrap(), expected);
+    }
+
+    #[test]
+    fn point_notat_ray_with_bounds() {
+        let ray = Ray::new(Point3::new(1., 0., 0.), Vector3::new(1., 1., 1.)).set_bounds(1.0);
+        let p = ray.at(1.5);
+
+        assert!(p.is_none());
     }
 }

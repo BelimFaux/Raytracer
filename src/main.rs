@@ -18,11 +18,15 @@ fn main() {
     let mut imgbuf = image::ImageBuffer::new(width, height);
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        // height - y to unflip the image
         *pixel = scene.trace_pixel(x, height - y).to_rgb()
     }
 
     let mut outpath = "output/".to_string();
     outpath.push_str(scene.get_output());
-    imgbuf.save(&outpath).unwrap();
-    println!("Saved image to {outpath}");
+    imgbuf.save(&outpath).unwrap_or_else(|err| {
+        eprintln!("Error while saving image to '{outpath}'\n{err}");
+        process::exit(1);
+    });
+    println!("Successfully saved image to {outpath}");
 }
