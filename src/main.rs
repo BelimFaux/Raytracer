@@ -1,7 +1,7 @@
 use lab3::input::file_to_scene;
 
 fn main() {
-    let scene = file_to_scene("scenes/example2.xml");
+    let scene = file_to_scene("scenes/test.xml");
     let (width, height) = scene.get_dimensions();
     let mut imgbuf = image::ImageBuffer::new(width, height);
 
@@ -11,5 +11,6 @@ fn main() {
 
     let mut outpath = "output/".to_string();
     outpath.push_str(scene.get_output());
-    imgbuf.save(outpath).unwrap();
+    imgbuf.save(&outpath).unwrap();
+    println!("Saved image to {outpath}");
 }
