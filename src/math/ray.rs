@@ -36,6 +36,10 @@ impl Ray {
         }
     }
 
+    pub fn t_in_range(&self, t: f32) -> bool {
+        (0.0..self.max_t).contains(&t)
+    }
+
     /// get the direction of the ray
     pub fn dir(&self) -> &Vector3 {
         &self.direction

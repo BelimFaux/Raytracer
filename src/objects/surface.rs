@@ -101,7 +101,7 @@ impl Material {
     /// Calculate the color for the given light source when hitting a point with this material with a ray
     pub fn get_color(&self, point: &Point3, normal: &Vector3, light: &Light, ray: &Ray) -> Color {
         match light {
-            Light::Ambient { color: _ } => self.color * self.ka,
+            Light::Ambient { .. } => self.color * self.ka,
             Light::Parallel { color, direction } => self.phong(color, direction, normal, ray.dir()),
             Light::Point { color, position } => {
                 let dir = *point - *position;
