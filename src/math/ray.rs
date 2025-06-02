@@ -29,7 +29,7 @@ impl Ray {
 
     /// calculate the point on the ray for `t`
     pub fn at(&self, t: f32) -> Option<Point3> {
-        if (0.0..self.max_t).contains(&t) {
+        if (0.0..=self.max_t).contains(&t) {
             Some(self.origin + t * self.direction)
         } else {
             None
@@ -37,7 +37,7 @@ impl Ray {
     }
 
     pub fn t_in_range(&self, t: f32) -> bool {
-        (0.0..self.max_t).contains(&t)
+        (0.0..=self.max_t).contains(&t)
     }
 
     /// get the direction of the ray

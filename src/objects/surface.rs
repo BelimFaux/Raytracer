@@ -21,31 +21,30 @@ impl Sphere {
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula
-    fn intersection_coefficients(&self, with: &Ray) -> (f32, f32, f32) {
-        let oc = self.center - *with.orig();
-        let a = with.dir().length_squared();
-        let h = with.dir().dot(&oc);
-        let c = oc.length_squared() - self.radius * self.radius;
-        (a, h, c)
+    /// The ray direction should be normalized
+    fn intersection_coefficients(&self, with: &Ray) -> (f32, f32) {
+        let oc = *with.orig() - self.center;
+        let b = oc.dot(with.dir());
+        let c = oc.dot(&oc) - self.radius * self.radius;
+        let h = b * b - c;
+        (b, h)
     }
 
     /// Test if any object intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
-        let (a, h, c) = self.intersection_coefficients(with);
-        let discr = h * h - a * c;
-        discr >= 0. && with.at((h - discr.sqrt()) / a).is_some()
+        let (b, h) = self.intersection_coefficients(with);
+        h >= 0. && with.t_in_range(-b - h.sqrt())
     }
 
     /// Calculates the intersection of the sphere and the `with` Ray if present
     /// Returns `None` if there is no intersection
     pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
-        let (a, h, c) = self.intersection_coefficients(with);
-        let discr = h * h - a * c;
-        if discr < 0. {
+        let (b, h) = self.intersection_coefficients(with);
+        if h < 0. {
             return None;
         }
 
-        let t = (h - discr.sqrt()) / (a);
+        let t = -b - h.sqrt();
         let p = with.at(t);
         let mut n = self.center - p?;
         n.normalize();

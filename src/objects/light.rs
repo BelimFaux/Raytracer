@@ -18,15 +18,17 @@ impl Light {
                 color: _,
                 direction,
             } => {
-                let direction = -*direction;
+                let direction = -Vector3::normal(direction);
                 let pos = *from + BIAS * direction;
                 Some(Ray::new(pos, direction))
             }
             Self::Point { color: _, position } => {
-                let direction = *position - *from;
+                let mut direction = *position - *from;
                 let length = direction.length();
+                direction /= length; // normalize
                 let pos = *from + BIAS * direction;
-                Some(Ray::new(pos, direction).set_bounds(length))
+                Some(Ray::new(pos, direction).set_bounds(length)) // bounds should be the initial
+                                                                  // length
             }
         }
     }
