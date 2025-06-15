@@ -1,6 +1,9 @@
-use std::{env, process};
+use std::{env, path::Path, process};
 
-use lab3::input::{file_to_scene, Config};
+use lab3::{
+    image,
+    input::{file_to_scene, Config},
+};
 
 fn main() {
     let args: Vec<_> = env::args().collect();
@@ -15,18 +18,22 @@ fn main() {
     });
 
     let (width, height) = scene.get_dimensions();
-    let mut imgbuf = image::ImageBuffer::new(width, height);
+    let mut imgbuf = image::Image::new(width, height);
 
-    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        // height - y to unflip the image
-        *pixel = scene.trace_pixel(x, height - y).to_rgb()
+    for x in 0..width {
+        for y in 0..height {
+            *imgbuf.get_pixel_mut(x, y) = scene.trace_pixel(x, height - y).to_rgb();
+        }
     }
 
     let mut outpath = "output/".to_string();
     outpath.push_str(scene.get_output());
-    imgbuf.save(&outpath).unwrap_or_else(|err| {
+    let path = Path::new(&outpath);
+
+    imgbuf.save_png(path).unwrap_or_else(|err| {
         eprintln!("Error while saving image to '{outpath}'\n{err}");
         process::exit(1);
     });
+
     println!("Successfully saved image to {outpath}");
 }

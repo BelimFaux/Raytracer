@@ -8,6 +8,6 @@ name = "lab3"
 path = "src/lib.rs"
 
 [dependencies]
-image = "0.25.6"
+png = "0.17.16"
 quick-xml = { version = "0.37.5", features = ["serialize"] }
 serde = { version = "1.0.219", features = ["derive"] }
