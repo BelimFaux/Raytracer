@@ -306,7 +306,7 @@ mod test {
         let color = Color::new(1., 0.5, 0.); // Orange
         let pixel = color.to_rgb();
 
-        let expected = image::Rgb([255, 127, 0]);
+        let expected = [255, 127, 0];
 
         assert_eq!(pixel, expected);
     }

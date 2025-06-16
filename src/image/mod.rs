@@ -1,6 +1,10 @@
 //! Module for interacting with images
 
-use std::{fs::File, io::BufWriter, path::Path};
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 /// Represents a pixel in Rgb with 3 values from 0 to 255
 pub type Rgb = [u8; 3];
@@ -32,7 +36,9 @@ impl Image {
     }
 
     /// Saves the image as a png image to the specified path
-    pub fn save_png(self, path: &Path) -> Result<(), std::io::Error> {
+    /// If the path does not already have the .png extension, it will be added
+    pub fn save_png(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
+        path.set_extension("png");
         let file = File::create(path)?;
         let w = &mut BufWriter::new(file);
 
@@ -50,6 +56,30 @@ impl Image {
         let mut writer = encoder.write_header()?;
 
         writer.write_image_data(self.buf.as_flattened())?;
+
+        Ok(())
+    }
+
+    /// Saves the image as a ppm image to the specified path
+    /// If the path does not already have the .ppm extension, it will be added
+    pub fn save_ppm(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
+        path.set_extension("ppm");
+        let file = File::create(path)?;
+        let mut w = BufWriter::new(file);
+
+        w.write_all(b"P3\n\n")?;
+        w.write_all(format!("{} {} 255\n", self.width, self.height).as_bytes())?;
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let pixel = self
+                    .buf
+                    .get((x + self.width * y) as usize)
+                    .unwrap_or(&[0u8; 3]);
+
+                w.write_all(format!("{} {} {}\n", pixel[0], pixel[1], pixel[2]).as_bytes())?;
+            }
+        }
 
         Ok(())
     }
