@@ -28,5 +28,11 @@ cargo build --release
 ./target/release/lab3 scenes/example1.xml
 ```
 
+- the binary can be optionally compiled without png support. In that case, the images are exported as ppm files.
+
+```sh
+cargo build --no-default-features --release
+```
+
 - The program will save the resulting image files with the name specified in the input file in an `output` directory
   - If this directory does not exist, the program will fail

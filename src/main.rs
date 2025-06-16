@@ -30,7 +30,7 @@ fn main() {
     outpath.push("output/");
     outpath.push(scene.get_output());
 
-    imgbuf.save_png(&mut outpath).unwrap_or_else(|err| {
+    imgbuf.save(&mut outpath).unwrap_or_else(|err| {
         eprintln!(
             "Error while saving image to '{}'\n{err}",
             outpath.to_str().unwrap_or("<INVALID PATH>")
