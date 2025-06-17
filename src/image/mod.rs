@@ -1,8 +1,9 @@
-//! Module for interacting with images
+//! image module
+//! responsible for interacting with images, such as manipulating, saving and loading
 
 #[cfg(not(feature = "png"))]
 use std::io::Write;
-use std::{fs::File, io::BufWriter, path::PathBuf};
+use std::{fs::File, io::BufWriter, path::PathBuf, slice::IterMut};
 
 /// Represents a pixel in Rgb with 3 values from 0 to 255
 pub type Rgb = [u8; 3];
@@ -25,12 +26,14 @@ impl Image {
         }
     }
 
-    /// Returns a mutable reference to a pixel in the image
-    /// If the x and y values are out of bounds, the function will panic
-    pub fn get_pixel_mut(&mut self, x: u32, y: u32) -> &mut Rgb {
-        self.buf
-            .get_mut((x + self.width * y) as usize)
-            .expect("I'll trust the caller...")
+    /// Creates an Iterator that traverses all pixels and their position in a cache friendly manner
+    pub fn enumerate_pixels_mut(&mut self) -> EnumeratePixelsMut {
+        EnumeratePixelsMut {
+            iter: self.buf.iter_mut(),
+            width: self.width,
+            x: 0,
+            y: 0,
+        }
     }
 
     /// Saves the image as a png image to the specified path
@@ -82,5 +85,30 @@ impl Image {
         }
 
         Ok(())
+    }
+}
+
+/// Enumerates pixels of an image
+pub struct EnumeratePixelsMut<'a> {
+    iter: IterMut<'a, Rgb>,
+    width: u32,
+    x: u32,
+    y: u32,
+}
+
+impl<'a> Iterator for EnumeratePixelsMut<'a> {
+    /// x, y, pixel
+    type Item = (u32, u32, &'a mut Rgb);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (x, y) = (self.x, self.y);
+        if self.x < self.width - 1 {
+            self.x += 1;
+        } else {
+            self.y += 1;
+            self.x = 0;
+        }
+
+        self.iter.next().map(|p| (x, y, p))
     }
 }

@@ -4,6 +4,8 @@ use std::fs;
 use super::{serial_types::SerialScene, InputError};
 use crate::objects::Scene;
 
+/// Read in an xml fie from the specified path and parse to a scene object
+/// The xml file should have the correct format as specified [here](https://teaching.vda.univie.ac.at/graphics/25s/Labs/Lab3/lab2_file_specification.html)
 pub fn file_to_scene(path: &str) -> Result<Scene, InputError> {
     let content = fs::read_to_string(path).map_err(|err| InputError(err.to_string()))?;
 

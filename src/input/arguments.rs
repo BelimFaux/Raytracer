@@ -7,6 +7,7 @@ pub struct Config {
 }
 
 impl Config {
+    /// build a config from a slice of Strings containing the arguments
     pub fn build(args: &[String]) -> Result<Config, InputError> {
         if args.len() < 2 {
             Err(InputError(String::from("Missing input path")))
@@ -17,6 +18,7 @@ impl Config {
         }
     }
 
+    /// get a referencee to the provided input file path
     pub fn get_input(&self) -> &str {
         &self.input_file
     }

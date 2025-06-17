@@ -20,10 +20,9 @@ fn main() {
     let (width, height) = scene.get_dimensions();
     let mut imgbuf = image::Image::new(width, height);
 
-    for y in 0..height {
-        for x in 0..width {
-            *imgbuf.get_pixel_mut(x, y) = scene.trace_pixel(x, height - y).to_rgb();
-        }
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        // invert y to 'unflip' the image
+        *pixel = scene.trace_pixel(x, height - y).to_rgb();
     }
 
     let mut outpath = PathBuf::new();
