@@ -111,4 +111,8 @@ impl<'a> Iterator for EnumeratePixelsMut<'a> {
 
         self.iter.next().map(|p| (x, y, p))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
 }

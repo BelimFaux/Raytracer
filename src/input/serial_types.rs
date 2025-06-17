@@ -1,6 +1,6 @@
 use crate::{
     math::{to_radians, Color, Vector3},
-    objects::{Camera, Light, Material, Scene, Sphere},
+    objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface},
 };
 use serde::Deserialize;
 
@@ -167,7 +167,7 @@ pub(super) enum Transform {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum Surface {
+pub(super) enum SerialSurface {
     Sphere {
         #[serde(rename = "@radius")]
         radius: f32,
@@ -196,23 +196,33 @@ pub(super) struct TransformList {
     transforms: Vec<Transform>,
 }
 
-impl From<Surface> for Sphere {
-    fn from(inp: Surface) -> Sphere {
+impl From<SerialSurface> for Surface {
+    fn from(inp: SerialSurface) -> Surface {
         match inp {
-            Surface::Sphere {
+            SerialSurface::Sphere {
                 radius,
                 position,
                 material_solid,
                 material_textured: _,
                 transform: _,
-            } => Sphere::new(
+            } => Surface::Sphere(Sphere::new(
                 position,
                 radius,
                 material_solid
                     .expect("Only solid materials are implemented")
                     .into(),
-            ),
-            _ => unimplemented!("Mesh's are not yet supported!"),
+            )),
+            SerialSurface::Mesh {
+                name: _,
+                material_solid,
+                material_textured: _,
+                transform: _,
+            } => Surface::Mesh(Mesh::new(
+                Vec::new(),
+                material_solid
+                    .expect("Only solid materials are implemented")
+                    .into(),
+            )),
         }
     }
 }
@@ -286,7 +296,7 @@ pub(super) struct LightList {
 pub(super) struct SurfaceList {
     #[serde(default)]
     #[serde(rename = "$value")]
-    surfaces: Vec<Surface>,
+    surfaces: Vec<SerialSurface>,
 }
 
 impl From<SerialScene> for Scene {

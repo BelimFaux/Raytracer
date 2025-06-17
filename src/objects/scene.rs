@@ -1,14 +1,18 @@
 use crate::math::{Color, Ray};
 
-use super::{surface::Intersection, Camera, Light, Sphere};
+use super::{
+    surface::{Intersection, Surface},
+    Camera, Light,
+};
 
 /// Struct to hold all data belonging to a single scene
+#[derive(Debug)]
 pub struct Scene {
     output: String,
     background_color: Color,
     camera: Camera,
     lights: Vec<Light>,
-    surfaces: Vec<Sphere>,
+    surfaces: Vec<Surface>,
 }
 
 impl Scene {
@@ -18,7 +22,7 @@ impl Scene {
         background_color: Color,
         camera: Camera,
         lights: Vec<Light>,
-        surfaces: Vec<Sphere>,
+        surfaces: Vec<Surface>,
     ) -> Scene {
         Scene {
             output,
@@ -43,7 +47,7 @@ impl Scene {
     fn intersects_any(&self, with: &Ray) -> bool {
         self.surfaces
             .iter()
-            .any(|sphere| sphere.has_intersection(with))
+            .any(|surface| surface.has_intersection(with))
     }
 
     /// Find the closest intersection of a ray with any surface in the scene
@@ -52,7 +56,7 @@ impl Scene {
         self.surfaces
             .iter()
             // map each sphere to it's intersection with the ray if it exists
-            .filter_map(|sphere| sphere.intersection(with))
+            .filter_map(|surface| surface.intersection(with))
             // sort the intersections by 't'
             .min_by(|lhs, rhs| lhs.t.partial_cmp(&rhs.t).expect("t shouldn't be NaN"))
     }
