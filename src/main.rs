@@ -2,7 +2,7 @@ use std::{env, path::PathBuf, process, sync::mpsc};
 
 use lab3::{
     image,
-    input::{file_to_scene, Config},
+    input::{file_to_scene, print_help, Config},
     misc::ProgressBar,
 };
 
@@ -13,6 +13,11 @@ fn main() {
         process::exit(1);
     });
 
+    if config.help() {
+        print_help();
+        process::exit(0);
+    }
+
     let scene = file_to_scene(config.get_input()).unwrap_or_else(|err| {
         eprintln!("Error while parsing file '{}':\n{err}", config.get_input());
         process::exit(1);
@@ -21,16 +26,19 @@ fn main() {
     let (width, height) = scene.get_dimensions();
     let mut imgbuf = image::Image::new(width, height);
 
-    let mut progress = ProgressBar::new((width * height) as usize);
     let (tx, rx) = mpsc::channel();
 
-    // thread for printing progress bar
-    // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the mainthread
-    std::thread::spawn(move || {
-        while rx.recv().is_ok() {
-            progress.next();
-        }
-    });
+    if config.progress_bar() {
+        let mut progress = ProgressBar::new((width * height) as usize);
+
+        // thread for printing progress bar
+        // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the mainthread
+        std::thread::spawn(move || {
+            while rx.recv().is_ok() {
+                progress.next();
+            }
+        });
+    }
 
     imgbuf.par_init_pixels(|(x, y)| {
         let tx = tx.clone();
@@ -44,7 +52,12 @@ fn main() {
     outpath.push("output/");
     outpath.push(scene.get_output());
 
-    imgbuf.save(&mut outpath).unwrap_or_else(|err| {
+    let ret = if config.ppm() {
+        imgbuf.save_ppm(&mut outpath)
+    } else {
+        imgbuf.save_png(&mut outpath)
+    };
+    ret.unwrap_or_else(|err| {
         eprintln!(
             "Error while saving image to '{}'\n{err}",
             outpath.to_str().unwrap_or("<INVALID PATH>")

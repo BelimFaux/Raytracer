@@ -7,12 +7,8 @@ edition = "2021"
 name = "lab3"
 path = "src/lib.rs"
 
-[features]
-default = ["png"]
-png = ["dep:png"]
-
 [dependencies]
-png = { version = "0.17.16", optional = true }
+png = "0.17.16"
 quick-xml = { version = "0.37.5", features = ["serialize"] }
 rayon = "1.10.0"
 serde = { version = "1.0.219", features = ["derive"] }

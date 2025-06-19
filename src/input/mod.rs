@@ -17,5 +17,5 @@ impl Display for InputError {
 
 use std::fmt::Display;
 
-pub use arguments::Config;
+pub use arguments::{print_help, Config};
 pub use xml::*;

@@ -1,7 +1,6 @@
 //! image module
 //! responsible for interacting with images, such as manipulating, saving and loading
 
-#[cfg(not(feature = "png"))]
 use std::io::Write;
 use std::{fs::File, io::BufWriter, path::PathBuf};
 
@@ -57,8 +56,7 @@ impl Image {
 
     /// Saves the image as a png image to the specified path
     /// If the path does not already have the .png extension, it will be added
-    #[cfg(feature = "png")]
-    pub fn save(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
+    pub fn save_png(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
         path.set_extension("png");
         let file = File::create(path)?;
         let w = &mut BufWriter::new(file);
@@ -83,8 +81,7 @@ impl Image {
 
     /// Saves the image as a ppm image to the specified path
     /// If the path does not already have the .ppm extension, it will be added
-    #[cfg(not(feature = "png"))]
-    pub fn save(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
+    pub fn save_ppm(self, path: &mut PathBuf) -> Result<(), std::io::Error> {
         path.set_extension("ppm");
         let file = File::create(path)?;
         let mut w = BufWriter::new(file);
