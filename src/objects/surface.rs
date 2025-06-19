@@ -81,7 +81,7 @@ impl Sphere {
 }
 
 /// struct to represent a triangle in 3D-Space
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Triangle {
     points: [Point3; 3],
     normals: [Vector3; 3],
@@ -173,47 +173,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(_: Vec<Triangle>, material: Material) -> Mesh {
-        /*
-         * v 5.000000 7.499999 -10.000000
-         * v 5.000000 -2.499999 -10.000000
-         * v 5.000000 -2.499998 0.000000
-         * v 5.000000 7.500001 -0.000002
-         * v 5.000000 7.499999 -10.000000
-         * v 5.000000 -2.499999 -10.000000
-         * v -5.000000 -2.499998 -10.000000
-         * v -4.999998 7.500001 -10.000000
-         * v 5.000000 -2.500000 -0.000001
-         * v 5.000000 -2.500000 -9.999999
-         * v -5.000000 -2.500000 -9.999998
-         * v -4.999998 -2.500000 0.000001
-         * vn -1.000000 0.000000 0.000000
-         * vn 0.000000 0.000000 1.000000
-         * vn 0.000000 1.000000 0.000000
-         */
-        let p1 = Point3::new(5., 7.5, -10.);
-        let p2 = Point3::new(5., -2.5, -10.);
-        let p3 = Point3::new(5., -2.5, 0.);
-        let p4 = Point3::new(5., 7.5, 0.);
-        let p5 = Point3::new(5., 7.5, -10.);
-        let p6 = Point3::new(5., -2.5, -10.);
-        let p7 = Point3::new(-5., -2.5, -10.);
-        let p8 = Point3::new(-5., 7.5, -10.);
-        let p9 = Point3::new(5., -2.5, 0.);
-        let p10 = Point3::new(5., -2.5, -10.);
-        let p11 = Point3::new(-5., -2.5, -10.);
-        let p12 = Point3::new(-5., -2.5, 0.);
-        let n1 = Vector3::new(-1., 0., 0.);
-        let n2 = Vector3::new(0., 0., 1.);
-        let n3 = Vector3::new(0., 1., 0.);
-        let triangles = vec![
-            Triangle::new([p1, p4, p3], [n1; 3]),
-            Triangle::new([p1, p3, p2], [n1; 3]),
-            Triangle::new([p5, p8, p7], [n2; 3]),
-            Triangle::new([p5, p7, p6], [n2; 3]),
-            Triangle::new([p9, p10, p11], [n3; 3]),
-            Triangle::new([p9, p11, p12], [n3; 3]),
-        ];
+    pub fn new(triangles: Vec<Triangle>, material: Material) -> Mesh {
         Mesh {
             triangles,
             material,

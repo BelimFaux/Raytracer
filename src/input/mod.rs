@@ -2,9 +2,11 @@
 //! responsible for receiving and parsing input files
 
 mod arguments;
+mod objparser;
 mod serial_types;
 mod xml;
 
+#[derive(Debug)]
 pub struct InputError(String);
 
 impl Display for InputError {

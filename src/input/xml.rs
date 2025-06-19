@@ -1,5 +1,5 @@
 use quick_xml;
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use super::{serial_types::SerialScene, InputError};
 use crate::objects::Scene;
@@ -7,12 +7,13 @@ use crate::objects::Scene;
 /// Read in an xml fie from the specified path and parse to a scene object
 /// The xml file should have the correct format as specified [here](https://teaching.vda.univie.ac.at/graphics/25s/Labs/Lab3/lab2_file_specification.html)
 pub fn file_to_scene(path: &str) -> Result<Scene, InputError> {
-    let content = fs::read_to_string(path).map_err(|err| InputError(err.to_string()))?;
+    let mut path = PathBuf::from(path);
+    let content = fs::read_to_string(&path).map_err(|err| InputError(err.to_string()))?;
 
     let scene: SerialScene =
         quick_xml::de::from_str(&content).map_err(|err| InputError(err.to_string()))?;
 
-    Ok(scene.into())
+    scene.convert_to_scene(&mut path)
 }
 
 #[cfg(test)]
@@ -142,7 +143,7 @@ mod tests {
         "#;
 
         let serial_scene: SerialScene = quick_xml::de::from_str(xml).unwrap();
-        let scene: Scene = serial_scene.into();
+        let scene: Scene = serial_scene.convert_to_scene(&mut PathBuf::new()).unwrap();
 
         assert_eq!(scene.get_output(), "myImage.png");
         assert_eq!(scene.get_dimensions(), (1920, 1080));

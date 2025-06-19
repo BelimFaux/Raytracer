@@ -1,8 +1,12 @@
+use std::{fs, path::PathBuf};
+
 use crate::{
     math::{to_radians, Color, Vector3},
     objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface},
 };
 use serde::Deserialize;
+
+use super::{objparser::parse, InputError};
 
 // --- Camera serial types ---
 
@@ -196,33 +200,43 @@ pub(super) struct TransformList {
     transforms: Vec<Transform>,
 }
 
-impl From<SerialSurface> for Surface {
-    fn from(inp: SerialSurface) -> Surface {
-        match inp {
+impl SerialSurface {
+    /// Converts deserialized surface to a surface
+    /// Takes a pathbuf from the path of the xml file, because it will look for obj files in the
+    /// same directory
+    fn convert_to_surface(self, path: &mut PathBuf) -> Result<Surface, InputError> {
+        match self {
             SerialSurface::Sphere {
                 radius,
                 position,
                 material_solid,
                 material_textured: _,
                 transform: _,
-            } => Surface::Sphere(Sphere::new(
+            } => Ok(Surface::Sphere(Sphere::new(
                 position,
                 radius,
                 material_solid
                     .expect("Only solid materials are implemented")
                     .into(),
-            )),
+            ))),
             SerialSurface::Mesh {
-                name: _,
+                name,
                 material_solid,
                 material_textured: _,
                 transform: _,
-            } => Surface::Mesh(Mesh::new(
-                Vec::new(),
-                material_solid
-                    .expect("Only solid materials are implemented")
-                    .into(),
-            )),
+            } => {
+                path.set_file_name(&name);
+                let file = fs::read_to_string(path).map_err(|err| {
+                    InputError(format!("While parsing file '{}:\n    {}", &name, err))
+                })?;
+                let triangles = parse(file)?;
+                Ok(Surface::Mesh(Mesh::new(
+                    triangles,
+                    material_solid
+                        .expect("Only solid materials are implemented")
+                        .into(),
+                )))
+            }
         }
     }
 }
@@ -299,22 +313,25 @@ pub(super) struct SurfaceList {
     surfaces: Vec<SerialSurface>,
 }
 
-impl From<SerialScene> for Scene {
-    fn from(inp: SerialScene) -> Scene {
-        Scene::new(
-            inp.output_file,
-            inp.background_color,
-            inp.camera.into(),
-            inp.lights
+impl SerialScene {
+    /// Converts deserialized scene to a scene
+    /// Takes a pathbuf from the path of the xml file, because it will look for other files in the
+    /// same directory
+    pub fn convert_to_scene(self, path: &mut PathBuf) -> Result<Scene, InputError> {
+        Ok(Scene::new(
+            self.output_file,
+            self.background_color,
+            self.camera.into(),
+            self.lights
                 .lights
                 .into_iter()
                 .map(|light| light.into())
                 .collect(),
-            inp.surfaces
+            self.surfaces
                 .surfaces
                 .into_iter()
-                .map(|surface| surface.into())
-                .collect(),
-        )
+                .map(|serial| serial.convert_to_surface(path))
+                .collect::<Result<Vec<_>, InputError>>()?,
+        ))
     }
 }
