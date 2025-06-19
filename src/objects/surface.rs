@@ -2,6 +2,8 @@ use crate::math::{max, Color, Point3, Ray, Vector3};
 
 use super::Light;
 
+/// struct to represent any surface in 3D
+/// Either a `Sphere` or a `Mesh`
 #[derive(Debug)]
 pub enum Surface {
     Sphere(Sphere),
@@ -68,7 +70,7 @@ impl Sphere {
 
         let t = -b - h.sqrt();
         let p = with.at(t);
-        let mut n = self.center - p?;
+        let mut n = p? - self.center;
         n.normalize();
 
         Some(Intersection {
@@ -103,6 +105,7 @@ impl Triangle {
     }
 
     /// Test if the triangle intersects with the ray
+    /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
@@ -133,6 +136,7 @@ impl Triangle {
     }
 
     /// Calculates the intersection of the triangle and the `with` Ray if present
+    /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
     /// Returns `None` if there is no intersection
     pub fn intersection(&self, with: &Ray) -> Option<(Vector3, f32)> {
         let e1 = self.points[1] - self.points[0];
@@ -161,7 +165,7 @@ impl Triangle {
         let t = e2.dot(&qvec) * inv_det;
 
         if with.t_in_range(t) {
-            Some((-self.normal_at(u, v), t))
+            Some((self.normal_at(u, v), t))
         } else {
             None
         }
@@ -234,7 +238,7 @@ impl Material {
         neg_veye: &Vector3,
     ) -> Color {
         let l = Vector3::normal(neg_light);
-        let n = Vector3::normal(vnormal);
+        let n = -Vector3::normal(vnormal);
         let diffuse = self.color * self.kd * max(l.dot(&n), 0.0);
         let r = Vector3::reflect(&l, &n);
         let e = -Vector3::normal(neg_veye);

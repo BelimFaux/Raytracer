@@ -11,7 +11,7 @@ pub enum Light {
 impl Light {
     /// Calculate the shadow ray to the object from the point `from`
     pub fn shadow_ray(&self, from: &Point3) -> Option<Ray> {
-        const BIAS: f32 = 1e-4;
+        const BIAS: f32 = 1e-5;
         match self {
             Self::Ambient { .. } => None,
             Self::Parallel {
