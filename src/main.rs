@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, process};
+use std::{env, path::PathBuf, process, sync::mpsc};
 
 use lab3::{
     image,
@@ -22,12 +22,23 @@ fn main() {
     let mut imgbuf = image::Image::new(width, height);
 
     let mut progress = ProgressBar::new((width * height) as usize);
+    let (tx, rx) = mpsc::channel();
 
-    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+    // thread for printing progress bar
+    // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the thread
+    std::thread::spawn(move || {
+        while rx.recv().is_ok() {
+            progress.next();
+        }
+    });
+
+    imgbuf.par_init_pixels(|(x, y)| {
+        let tx = tx.clone();
         // invert y to 'unflip' the image
-        *pixel = scene.trace_pixel(x, height - y).to_rgb();
-        progress.next();
-    }
+        let ret = scene.trace_pixel(*x, height - *y).to_rgb();
+        let _ = tx.send(1);
+        ret
+    });
 
     let mut outpath = PathBuf::new();
     outpath.push("output/");

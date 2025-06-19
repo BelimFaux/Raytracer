@@ -3,7 +3,9 @@
 
 #[cfg(not(feature = "png"))]
 use std::io::Write;
-use std::{fs::File, io::BufWriter, path::PathBuf, slice::IterMut};
+use std::{fs::File, io::BufWriter, path::PathBuf};
+
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 
 /// Represents a pixel in Rgb with 3 values from 0 to 255
 pub type Rgb = [u8; 3];
@@ -26,14 +28,31 @@ impl Image {
         }
     }
 
-    /// Creates an Iterator that traverses all pixels and their position in a cache friendly manner
-    pub fn enumerate_pixels_mut(&mut self) -> EnumeratePixelsMut {
-        EnumeratePixelsMut {
-            iter: self.buf.iter_mut(),
-            width: self.width,
-            x: 0,
-            y: 0,
-        }
+    /// Set each pixel from the corresponding x and y value
+    /// Will try to use a parallel iterator for better performance
+    pub fn par_init_pixels<OP>(&mut self, op: OP)
+    where
+        OP: Fn(&mut (u32, u32)) -> Rgb + Sync + Send,
+    {
+        let mut x = 0;
+        let mut y = 0;
+
+        let mut coords: Vec<_> = self
+            .buf
+            .iter()
+            .map(|_| {
+                if x < self.width - 1 {
+                    x += 1;
+                } else {
+                    y += 1;
+                    x = 0;
+                }
+
+                (x, y)
+            })
+            .collect();
+
+        self.buf = coords.par_iter_mut().map(op).collect();
     }
 
     /// Saves the image as a png image to the specified path
@@ -85,34 +104,5 @@ impl Image {
         }
 
         Ok(())
-    }
-}
-
-/// Enumerates pixels of an image
-pub struct EnumeratePixelsMut<'a> {
-    iter: IterMut<'a, Rgb>,
-    width: u32,
-    x: u32,
-    y: u32,
-}
-
-impl<'a> Iterator for EnumeratePixelsMut<'a> {
-    /// x, y, pixel
-    type Item = (u32, u32, &'a mut Rgb);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let (x, y) = (self.x, self.y);
-        if self.x < self.width - 1 {
-            self.x += 1;
-        } else {
-            self.y += 1;
-            self.x = 0;
-        }
-
-        self.iter.next().map(|p| (x, y, p))
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
     }
 }
