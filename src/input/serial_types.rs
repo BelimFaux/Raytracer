@@ -17,7 +17,6 @@ pub(super) struct SerialCamera {
     up: Vector3,
     horizontal_fov: Fov,
     resolution: Resolution,
-    #[allow(unused)]
     max_bounces: MaxBounces,
 }
 
@@ -51,6 +50,7 @@ impl From<SerialCamera> for Camera {
             to_radians(inp.horizontal_fov.angle),
             inp.resolution.horizontal,
             inp.resolution.vertical,
+            inp.max_bounces.n,
         )
     }
 }
@@ -61,7 +61,6 @@ impl From<SerialCamera> for Camera {
 pub(super) struct MaterialSolid {
     color: Color,
     phong: Phong,
-    #[allow(unused)]
     reflectance: Reflectance,
     #[allow(unused)]
     transmittance: Transmittance,
@@ -123,6 +122,7 @@ impl From<MaterialSolid> for Material {
     fn from(inp: MaterialSolid) -> Material {
         Material::new(
             inp.color,
+            inp.reflectance.r,
             inp.phong.ka,
             inp.phong.kd,
             inp.phong.ks,

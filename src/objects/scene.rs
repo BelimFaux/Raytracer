@@ -64,7 +64,7 @@ impl Scene {
     /// Calculate the color of an intersection
     /// iterates over all lights and sums up their color at the intersection, if they are in los of
     /// the intersection point
-    fn intersection_color(&self, intersect: Intersection, ray: &Ray) -> Color {
+    fn intersection_color(&self, intersect: &Intersection, ray: &Ray) -> Color {
         self.lights
             .iter()
             // filter lights whose shadow ray intersects with any surfaces in the scene
@@ -81,15 +81,32 @@ impl Scene {
             .unwrap_or(Color::zero())
     }
 
+    /// Recursively ray trace a ray shot into the Scene
+    /// `depth` should be the allowed maximum depth, and will be _decreased_ with every iteration
+    fn recursive_trace(&self, ray: &Ray, depth: u32) -> Color {
+        match self.closest_intersection(ray) {
+            Some(intersection) => {
+                let color = self.intersection_color(&intersection, ray);
+                let mut reflected_color = Color::zero();
+                if depth == 0 {
+                    return color;
+                }
+                if intersection.get_reflectance() > 0. {
+                    let reflected_ray = intersection.reflected_ray(ray);
+                    reflected_color = self.recursive_trace(&reflected_ray, depth - 1);
+                }
+                color * (1. - intersection.get_reflectance()) + reflected_color
+            }
+            None => self.background_color,
+        }
+    }
+
     /// ray trace a pixel
     /// get the camera ray and test the closest intersection with any object
     /// then perform lighting calculations at the closest intersection
     pub fn trace_pixel(&self, u: u32, v: u32) -> Color {
         let ray = self.camera.get_ray_through(u, v);
 
-        match self.closest_intersection(&ray) {
-            Some(intersection) => self.intersection_color(intersection, &ray),
-            None => self.background_color,
-        }
+        self.recursive_trace(&ray, self.camera.get_max_bounces())
     }
 }

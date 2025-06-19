@@ -1,4 +1,4 @@
-use crate::math::{max, Color, Point3, Ray, Vector3};
+use crate::math::{max, reflect, Color, Point3, Ray, Vector3, BIAS};
 
 use super::Light;
 
@@ -181,6 +181,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    /// Create a new mesh
     pub fn new(triangles: Vec<Triangle>, material: Material) -> Mesh {
         Mesh {
             triangles,
@@ -188,10 +189,13 @@ impl Mesh {
         }
     }
 
+    /// Test if the mesh intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
         self.triangles.iter().any(|t| t.has_intersection(with))
     }
 
+    /// Calculates the intersection of the mesh and the `with` Ray if present
+    /// Returns `None` if there is no intersection
     pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
         let (n, t) = self
             .triangles
@@ -211,6 +215,7 @@ impl Mesh {
 #[derive(Clone, Debug)]
 pub struct Material {
     color: Color,
+    reflectance: f32,
     ka: f32,
     kd: f32,
     ks: f32,
@@ -219,9 +224,10 @@ pub struct Material {
 
 impl Material {
     /// Create a new material
-    pub fn new(color: Color, ka: f32, kd: f32, ks: f32, exp: u32) -> Material {
+    pub fn new(color: Color, reflectance: f32, ka: f32, kd: f32, ks: f32, exp: u32) -> Material {
         Material {
             color,
+            reflectance,
             ka,
             kd,
             ks,
@@ -274,6 +280,17 @@ impl Intersection<'_> {
         self.material
             .get_color(&self.point, &self.normal, light, ray)
     }
+
+    /// Reflect the given ray at the intersection point
+    pub fn reflected_ray(&self, ray: &Ray) -> Ray {
+        let dir = reflect(*ray.dir(), self.normal);
+        Ray::new(self.point + BIAS * dir, dir)
+    }
+
+    /// Return the reflectence parameter from the material that was hit
+    pub fn get_reflectance(&self) -> f32 {
+        self.material.reflectance
+    }
 }
 
 #[cfg(test)]
@@ -287,7 +304,7 @@ mod tests {
         let sphere = Sphere::new(
             Point3::new(0., 0., -1.),
             0.5,
-            Material::new(Color::new(0., 0., 0.), 0., 0., 0., 1),
+            Material::new(Color::new(0., 0., 0.), 1., 0., 0., 0., 1),
         );
 
         let two_hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));

@@ -8,6 +8,7 @@ pub struct Camera {
     width: f32,
     fov_t: f32,
     aspect: f32,
+    max_bounces: u32,
 }
 
 impl Camera {
@@ -19,6 +20,7 @@ impl Camera {
         fov_x: f32,
         horizontal: u32,
         vertical: u32,
+        max_bounces: u32,
     ) -> Camera {
         let aspect = vertical as f32 / horizontal as f32;
         let fov_t = fov_x.tan();
@@ -28,12 +30,17 @@ impl Camera {
             width: horizontal as f32,
             fov_t,
             aspect,
+            max_bounces,
         }
     }
 
     /// Return the image dimensions of the camera
     pub fn get_dimensions(&self) -> (u32, u32) {
         (self.width as u32, self.height as u32)
+    }
+
+    pub fn get_max_bounces(&self) -> u32 {
+        self.max_bounces
     }
 
     /// Construct a camera ray through pixel `(u, v)`

@@ -1,4 +1,4 @@
-use crate::math::{Color, Point3, Ray, Vector3};
+use crate::math::{Color, Point3, Ray, Vector3, BIAS};
 
 /// Enum to represent different types of light
 #[derive(Clone, Debug)]
@@ -11,7 +11,6 @@ pub enum Light {
 impl Light {
     /// Calculate the shadow ray to the object from the point `from`
     pub fn shadow_ray(&self, from: &Point3) -> Option<Ray> {
-        const BIAS: f32 = 1e-5;
         match self {
             Self::Ambient { .. } => None,
             Self::Parallel {
