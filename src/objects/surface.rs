@@ -98,7 +98,7 @@ impl Triangle {
 
     /// Return the normal for the given barycentric coordinates
     /// for flat shading this is constant
-    pub fn normal_at(&self, _u: f32, _v: f32) -> Vector3 {
+    fn normal_at(&self, _u: f32, _v: f32) -> Vector3 {
         (self.normals[0] + self.normals[1] + self.normals[2]) / 3.
     }
 
@@ -129,7 +129,7 @@ impl Triangle {
 
         let t = e2.dot(&qvec) * inv_det;
 
-        t > 0.
+        with.t_in_range(t)
     }
 
     /// Calculates the intersection of the triangle and the `with` Ray if present
@@ -160,7 +160,11 @@ impl Triangle {
 
         let t = e2.dot(&qvec) * inv_det;
 
-        Some((-self.normal_at(u, v), t))
+        if with.t_in_range(t) {
+            Some((-self.normal_at(u, v), t))
+        } else {
+            None
+        }
     }
 }
 
