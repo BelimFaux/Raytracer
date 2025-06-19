@@ -1,3 +1,7 @@
+//! misc module
+//! Contains structs and functions that dont fit in elsewhere
+
+/// Manages a simple ProgressBar that prints to stdout
 pub struct ProgressBar {
     curr: usize,
     max: usize,
@@ -8,6 +12,7 @@ impl ProgressBar {
     const FULL_CHAR: &str = "#";
     const EMPTY_CHAR: &str = "-";
 
+    /// Create a new ProgressBar with the given maximum
     pub fn new(max: usize) -> ProgressBar {
         ProgressBar {
             curr: 0,
@@ -16,6 +21,8 @@ impl ProgressBar {
         }
     }
 
+    /// Advances the ProgressBar by 1
+    /// Only prints, if the difference of percentage exceeds some threshold
     pub fn next(&mut self) {
         self.curr += 1;
         const WIDTH: f32 = 50.;
@@ -26,6 +33,7 @@ impl ProgressBar {
 
         let full = (WIDTH * percent) as usize;
         let empty = WIDTH as usize - full;
+
         print!(
             "\r[{}{}] {:.2}% ({}/{})",
             Self::FULL_CHAR.repeat(full),

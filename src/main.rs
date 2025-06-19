@@ -25,7 +25,7 @@ fn main() {
     let (tx, rx) = mpsc::channel();
 
     // thread for printing progress bar
-    // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the thread
+    // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the mainthread
     std::thread::spawn(move || {
         while rx.recv().is_ok() {
             progress.next();
@@ -36,7 +36,7 @@ fn main() {
         let tx = tx.clone();
         // invert y to 'unflip' the image
         let ret = scene.trace_pixel(*x, height - *y).to_rgb();
-        let _ = tx.send(1);
+        let _ = tx.send(1u8);
         ret
     });
 
