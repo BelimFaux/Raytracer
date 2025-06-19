@@ -3,6 +3,7 @@ use std::{env, path::PathBuf, process};
 use lab3::{
     image,
     input::{file_to_scene, Config},
+    misc::ProgressBar,
 };
 
 fn main() {
@@ -20,9 +21,12 @@ fn main() {
     let (width, height) = scene.get_dimensions();
     let mut imgbuf = image::Image::new(width, height);
 
+    let mut progress = ProgressBar::new((width * height) as usize);
+
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         // invert y to 'unflip' the image
         *pixel = scene.trace_pixel(x, height - y).to_rgb();
+        progress.next();
     }
 
     let mut outpath = PathBuf::new();
