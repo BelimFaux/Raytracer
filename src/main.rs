@@ -53,7 +53,7 @@ fn run() -> Result<(), InputError> {
     });
 
     let mut outpath = PathBuf::new();
-    outpath.push("output/");
+    outpath.push(config.outdir());
     outpath.push(scene.get_output());
 
     if config.ppm() {
