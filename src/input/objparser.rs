@@ -2,8 +2,10 @@ use crate::{math::Point3, objects::Triangle};
 
 use super::InputError;
 
+/// three positive integers
 type Triple = (u32, u32, u32);
 
+/// parses an `.obj` file to a list of triangles
 pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     let mut vertices = Vec::new();
     let mut normals = Vec::new();
@@ -37,6 +39,7 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     Ok(triangles)
 }
 
+/// Get 3 Points from a slice of points using a triple of indices
 fn get_elements(from: &[Point3], indices: Triple) -> Result<[Point3; 3], String> {
     Ok([
         *from
@@ -51,6 +54,9 @@ fn get_elements(from: &[Point3], indices: Triple) -> Result<[Point3; 3], String>
     ])
 }
 
+/// parse a face line in the format:
+/// `v/vt/vn v/vt/vn v/vt/vn`
+/// where `v` is the vertex index, `vt` is the texture index and `vn` is the normal index
 fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple), String> {
     if line.len() != 3 {
         return Err(format!("Expected 3 elements but got {}", line.len()));
@@ -79,6 +85,7 @@ fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple), String> {
     Ok((vertices.into(), normals.into()))
 }
 
+/// parse a single point in the format: `x y z`
 fn parse_point(line: Vec<&str>) -> Result<Point3, String> {
     if line.len() != 3 {
         return Err(format!("Expected 3 elements but got {}", line.len()));
@@ -93,8 +100,9 @@ fn parse_point(line: Vec<&str>) -> Result<Point3, String> {
     ))
 }
 
+/// construct an appropriate error message
 fn err(current_line: usize, msg: &str) -> InputError {
-    InputError(format!("Error on line {current_line}:\n{msg}"))
+    InputError(format!("Error on line {}: {msg}", current_line + 1))
 }
 
 #[cfg(test)]

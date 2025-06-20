@@ -43,6 +43,7 @@ fn run() -> Result<(), InputError> {
         });
     }
 
+    // render image
     imgbuf.par_init_pixels(|(x, y)| {
         let tx = tx.clone();
         // invert y to 'unflip' the image

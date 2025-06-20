@@ -227,9 +227,17 @@ impl SerialSurface {
             } => {
                 path.set_file_name(&name);
                 let file = fs::read_to_string(path).map_err(|err| {
-                    InputError(format!("While parsing file '{}:\n    {}", &name, err))
+                    InputError::new(format!(
+                        "Error while reading file '{}':\n    {}",
+                        &name, err
+                    ))
                 })?;
-                let triangles = parse(file)?;
+                let triangles = parse(file).map_err(|err| {
+                    InputError::new(format!(
+                        "Error while parsing file '{}':\n    {}",
+                        &name, err
+                    ))
+                })?;
                 Ok(Surface::Mesh(Mesh::new(
                     triangles,
                     material_solid
