@@ -97,6 +97,12 @@ pub(super) struct Phong {
     exp: u32,
 }
 
+impl From<Phong> for (f32, f32, f32, u32) {
+    fn from(value: Phong) -> Self {
+        (value.ka, value.kd, value.ks, value.exp)
+    }
+}
+
 #[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Reflectance {
@@ -123,10 +129,9 @@ impl From<MaterialSolid> for Material {
         Material::new(
             inp.color,
             inp.reflectance.r,
-            inp.phong.ka,
-            inp.phong.kd,
-            inp.phong.ks,
-            inp.phong.exp,
+            inp.transmittance.t,
+            inp.refraction.iof,
+            inp.phong.into(),
         )
     }
 }

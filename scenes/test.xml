@@ -25,15 +25,26 @@
         </point_light>
     </lights>
     <surfaces>
-        <mesh name="suzanne.obj">
+        <sphere radius="0.5">
+            <position x="0.0" y="1.0" z="-6.0"/>
             <material_solid>
-                <color r="0.3" g="0.2" b="0.5"/>
-                <phong ka="0.3" kd="0.9" ks="1.0" exponent="20"/>
-                <reflectance r="0.5"/>
+                <color r="0.3" g="0.3" b="0.6"/>
+                <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
+                <reflectance r="0.0"/>
                 <transmittance t="0.0"/>
-                <refraction iof="2.3"/>
+                <refraction iof="2.0"/>
             </material_solid>
-        </mesh>
+        </sphere>
+        <sphere radius="1.0">
+            <position x="0.0" y="1.0" z="-3.0"/>
+            <material_solid>
+                <color r="0.3" g="0.6" b="0.3"/>
+                <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
+                <reflectance r="0.0"/>
+                <transmittance t="0.7"/>
+                <refraction iof="2.0"/>
+            </material_solid>
+        </sphere>
         <mesh name="open_room.obj">
             <material_solid>
                 <color r="0.3" g="0.6" b="0.3"/>

@@ -67,8 +67,9 @@ impl Sphere {
         if h < 0. {
             return None;
         }
+        let h = h.sqrt();
 
-        let t = -b - h.sqrt();
+        let t = if -b - h < 0. { -b + h } else { -b - h };
         let p = with.at(t);
         let mut n = p? - self.center;
         n.normalize();
@@ -216,6 +217,8 @@ impl Mesh {
 pub struct Material {
     color: Color,
     reflectance: f32,
+    transmittance: f32,
+    refraction: f32,
     ka: f32,
     kd: f32,
     ks: f32,
@@ -224,14 +227,22 @@ pub struct Material {
 
 impl Material {
     /// Create a new material
-    pub fn new(color: Color, reflectance: f32, ka: f32, kd: f32, ks: f32, exp: u32) -> Material {
+    pub fn new(
+        color: Color,
+        reflectance: f32,
+        transmittance: f32,
+        refraction: f32,
+        phong: (f32, f32, f32, u32),
+    ) -> Material {
         Material {
             color,
             reflectance,
-            ka,
-            kd,
-            ks,
-            exp,
+            transmittance,
+            refraction,
+            ka: phong.0,
+            kd: phong.1,
+            ks: phong.2,
+            exp: phong.3,
         }
     }
 
@@ -287,9 +298,38 @@ impl Intersection<'_> {
         Ray::new(self.point + BIAS * dir, dir)
     }
 
+    /// Refract the ray at the intersection point
+    /// returns None if total interal refraction happens (no refracted ray has to be sent)
+    pub fn refracted_ray(&self, ray: &Ray) -> Option<Ray> {
+        let v = ray.dir();
+        let mut n = self.normal;
+        let mut n_dot_v = n.dot(v);
+        let n1_nt = if n_dot_v < 0. {
+            n_dot_v = -n_dot_v;
+            1. / self.material.refraction
+        } else {
+            n = -n;
+            self.material.refraction
+        };
+
+        let discr = 1. - (n1_nt * n1_nt) * (1. - (n_dot_v * n_dot_v));
+        if discr < 0. {
+            return Some(self.reflected_ray(ray));
+        }
+
+        let t = n1_nt * (*v + n * n_dot_v) - n * discr.sqrt();
+
+        Some(Ray::new(self.point + BIAS * t, t))
+    }
+
     /// Return the reflectence parameter from the material that was hit
     pub fn get_reflectance(&self) -> f32 {
         self.material.reflectance
+    }
+
+    /// Return the transmittance parameter from the material that was hit
+    pub fn get_transmittance(&self) -> f32 {
+        self.material.transmittance
     }
 }
 
@@ -304,7 +344,7 @@ mod tests {
         let sphere = Sphere::new(
             Point3::new(0., 0., -1.),
             0.5,
-            Material::new(Color::new(0., 0., 0.), 1., 0., 0., 0., 1),
+            Material::new(Color::new(0., 0., 0.), 0., 0., 0., (0., 0., 0., 1)),
         );
 
         let two_hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));

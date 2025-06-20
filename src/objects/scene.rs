@@ -88,6 +88,7 @@ impl Scene {
             Some(intersection) => {
                 let color = self.intersection_color(&intersection, ray);
                 let mut reflected_color = Color::zero();
+                let mut refracted_color = Color::zero();
                 if depth == 0 {
                     return color;
                 }
@@ -95,7 +96,14 @@ impl Scene {
                     let reflected_ray = intersection.reflected_ray(ray);
                     reflected_color = self.recursive_trace(&reflected_ray, depth - 1);
                 }
-                color * (1. - intersection.get_reflectance()) + reflected_color
+                if intersection.get_transmittance() > 0. {
+                    if let Some(refracted_ray) = intersection.refracted_ray(ray) {
+                        refracted_color = self.recursive_trace(&refracted_ray, depth - 1);
+                    }
+                }
+                color * (1. - intersection.get_reflectance() - intersection.get_transmittance())
+                    + reflected_color
+                    + refracted_color
             }
             None => self.background_color,
         }
