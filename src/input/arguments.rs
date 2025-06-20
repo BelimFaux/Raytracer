@@ -12,7 +12,7 @@ enum OptAction {
 }
 
 #[derive(Debug, Clone)]
-pub struct CliOption {
+struct CliOption {
     long: &'static str,
     description: &'static str,
     short: Option<char>,
