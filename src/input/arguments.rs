@@ -9,7 +9,7 @@ pub struct CliOption {
     short: Option<char>,
 }
 
-const OPTIONS: [CliOption; 3] = [
+const OPTIONS: [CliOption; 4] = [
     CliOption {
         long: "ppm",
         description: "Export the image as a ppm",
@@ -24,6 +24,11 @@ const OPTIONS: [CliOption; 3] = [
         long: "help",
         description: "Print this help message",
         short: Some('h'),
+    },
+    CliOption {
+        long: "version",
+        description: "Print the version number",
+        short: Some('v'),
     },
 ];
 
@@ -43,7 +48,11 @@ fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-pub fn print_help() {
+fn print_version() {
+    println!("{} {}\n", name(), version());
+}
+
+fn print_help() {
     println!("{} {}\n", name(), version());
     println!("Usage: {} [OPTIONS] FILE\n", name());
 
@@ -80,8 +89,14 @@ impl Config {
         }
     }
 
-    /// build a config from a slice of Strings containing the arguments
-    pub fn build(args: &[String]) -> Result<Config, InputError> {
+    /// Convert a message to a argument specific InputError
+    fn parse_err(msg: &str) -> InputError {
+        InputError::new(format!("Error while parsing Arguments:\n    {msg}"))
+    }
+
+    /// Build a config from a slice of Strings containing the arguments
+    /// If this function returns Ok but with a None value, the program should exit early
+    pub fn build(args: &[String]) -> Result<Option<Config>, InputError> {
         let mut config = Config::default();
         let mut unparsed = Vec::new();
 
@@ -97,34 +112,43 @@ impl Config {
         }
 
         if config.help() {
-            return Ok(config);
+            print_help();
+            return Ok(None);
+        }
+
+        if config.version() {
+            print_version();
+            return Ok(None);
         }
 
         let file = unparsed
             .first()
-            .ok_or(InputError(String::from("Missing input path")))?;
+            .ok_or(Self::parse_err("Missing input path"))?;
 
         config.input_file = file.to_string();
 
-        Ok(config)
+        Ok(Some(config))
     }
 
+    /// Helper to parse a long option (prepended by '--')
     fn parse_longopt(&mut self, arg: &str) -> Result<(), InputError> {
         let opt = OPTIONS
             .iter()
             .find(|opt| opt.long == arg)
-            .ok_or(InputError(format!("Unknown long option '{arg}'")))?;
+            .ok_or(Self::parse_err(&format!("Unknown long option '{arg}'")))?;
 
         self.options.insert(opt.long);
         Ok(())
     }
 
+    /// Helper to parse (multiple) short options (prepended by '-')
+    /// Each character is treated as it's own short option, so `-ph` is equal to `-p -h`
     fn parse_shortopt(&mut self, arg: &str) -> Result<(), InputError> {
         for c in arg.chars() {
             let opt = OPTIONS
                 .iter()
                 .find(|opt| opt.short.is_some_and(|o| o == c))
-                .ok_or(InputError(format!(
+                .ok_or(Self::parse_err(&format!(
                     "Unknown short option{} '{arg}'",
                     if arg.len() > 1 { "s" } else { "" }
                 )))?;
@@ -142,8 +166,12 @@ impl Config {
         self.options.contains("ppm")
     }
 
-    pub fn help(&self) -> bool {
+    fn help(&self) -> bool {
         self.options.contains("help")
+    }
+
+    fn version(&self) -> bool {
+        self.options.contains("version")
     }
 
     /// get a referencee to the provided input file path

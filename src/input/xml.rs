@@ -1,17 +1,32 @@
 use quick_xml;
-use std::{fs, path::PathBuf};
+use std::{
+    error::Error,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use super::{serial_types::SerialScene, InputError};
 use crate::objects::Scene;
+
+/// convert any error to a specific input error
+fn err_to_input_err<E>(err: E, path: &Path) -> InputError
+where
+    E: Error,
+{
+    InputError::new(format!(
+        "Error while parsing xml file {}:\n    {err}",
+        path.to_str().unwrap_or("<INVALID PATH>")
+    ))
+}
 
 /// Read in an xml fie from the specified path and parse to a scene object
 /// The xml file should have the correct format as specified [here](https://teaching.vda.univie.ac.at/graphics/25s/Labs/Lab3/lab2_file_specification.html)
 pub fn file_to_scene(path: &str) -> Result<Scene, InputError> {
     let mut path = PathBuf::from(path);
-    let content = fs::read_to_string(&path).map_err(|err| InputError(err.to_string()))?;
+    let content = fs::read_to_string(&path).map_err(|err| err_to_input_err(err, &path))?;
 
     let scene: SerialScene =
-        quick_xml::de::from_str(&content).map_err(|err| InputError(err.to_string()))?;
+        quick_xml::de::from_str(&content).map_err(|err| err_to_input_err(err, &path))?;
 
     scene.convert_to_scene(&mut path)
 }
