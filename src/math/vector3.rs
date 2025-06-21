@@ -92,6 +92,19 @@ impl Vector3 {
     }
 }
 
+impl ops::Index<usize> for Vector3 {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Out of bounds access"),
+        }
+    }
+}
+
 // --- Operators ---
 
 impl ops::Add for Vector3 {

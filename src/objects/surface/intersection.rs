@@ -29,21 +29,27 @@ impl Intersection<'_> {
 
     /// Refract the ray at the intersection point
     /// returns None if total interal refraction happens (no refracted ray has to be sent)
+    /// See [here](https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel.html) for derivation
     pub fn refracted_ray(&self, ray: &Ray) -> Option<Ray> {
         let v = ray.dir();
         let mut n = self.normal;
         let mut n_dot_v = n.dot(v);
+
+        // snells law
         let n1_nt = if n_dot_v < 0. {
+            // hit from outside
             n_dot_v = -n_dot_v;
             1. / self.material.refraction()
         } else {
+            // hit from inside
             n = -n;
             self.material.refraction()
         };
 
         let discr = 1. - (n1_nt * n1_nt) * (1. - (n_dot_v * n_dot_v));
+        // total internal refraction
         if discr < 0. {
-            return Some(self.reflected_ray(ray));
+            return None;
         }
 
         let t = n1_nt * (*v + n * n_dot_v) - n * discr.sqrt();

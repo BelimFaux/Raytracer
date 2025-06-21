@@ -49,6 +49,11 @@ impl Ray {
     pub fn orig(&self) -> &Vector3 {
         &self.origin
     }
+
+    /// get the maximum t bound
+    pub fn max_t(&self) -> f32 {
+        self.max_t
+    }
 }
 
 // --- Tests ---
