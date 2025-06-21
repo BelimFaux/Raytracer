@@ -1,4 +1,4 @@
-use crate::math::{Color, Ray};
+use crate::math::{max, Color, Ray};
 
 use super::{
     surface::{Intersection, Surface},
@@ -101,9 +101,13 @@ impl Scene {
                         refracted_color = self.recursive_trace(&refracted_ray, depth - 1);
                     }
                 }
-                color * (1. - intersection.get_reflectance() - intersection.get_transmittance())
-                    + reflected_color
-                    + refracted_color
+                color
+                    * max(
+                        1. - intersection.get_reflectance() - intersection.get_transmittance(),
+                        0.0,
+                    )
+                    + reflected_color * intersection.get_reflectance()
+                    + refracted_color * intersection.get_transmittance()
             }
             None => self.background_color,
         }

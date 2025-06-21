@@ -3,7 +3,7 @@ use super::Vector3;
 const PI: f32 = std::f32::consts::PI;
 
 /// bias to prevent surface and shadow acne
-pub const BIAS: f32 = 1e-5;
+pub const BIAS: f32 = 1e-4;
 
 /// Convert degress to to radians
 pub fn to_radians(deg: u32) -> f32 {

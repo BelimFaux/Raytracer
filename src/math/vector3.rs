@@ -159,6 +159,26 @@ impl ops::Neg for Vector3 {
     }
 }
 
+impl ops::Mul<Vector3> for Vector3 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: Vector3) -> Self::Output {
+        Vector3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+}
+
+impl ops::MulAssign<Vector3> for Vector3 {
+    fn mul_assign(&mut self, rhs: Vector3) {
+        self.x *= rhs.x;
+        self.y *= rhs.y;
+        self.z *= rhs.z;
+    }
+}
+
 impl ops::Mul<f32> for Vector3 {
     type Output = Vector3;
 

@@ -47,7 +47,7 @@ impl Material {
     ) -> Color {
         let l = Vector3::normal(neg_light);
         let n = -Vector3::normal(vnormal);
-        let diffuse = self.color * self.kd * max(l.dot(&n), 0.0);
+        let diffuse = *light_color * self.color * self.kd * max(l.dot(&n), 0.0);
         let r = Vector3::reflect(&l, &n);
         let e = -Vector3::normal(neg_veye);
         let specular = *light_color * self.ks * max(e.dot(&r), 0.0).powf(self.exp as f32);
@@ -57,7 +57,7 @@ impl Material {
     /// Calculate the color for the given light source when hitting a point with this material with a ray
     pub fn get_color(&self, point: &Point3, normal: &Vector3, light: &Light, ray: &Ray) -> Color {
         match light {
-            Light::Ambient { .. } => self.color * self.ka,
+            Light::Ambient { color } => *color * self.color * self.ka,
             Light::Parallel { color, direction } => self.phong(color, direction, normal, ray.dir()),
             Light::Point { color, position } => {
                 let dir = *point - *position;
