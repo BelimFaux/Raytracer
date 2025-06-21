@@ -3,7 +3,7 @@ use crate::{
     objects::Light,
 };
 
-use super::Material;
+use super::{Material, Texel};
 
 /// Struct to represent an intersection of a ray and a surface
 /// has to live at least as long as the surface, since it borrows its material
@@ -11,6 +11,7 @@ pub struct Intersection<'a> {
     pub point: Point3,
     pub t: f32,
     pub normal: Vector3,
+    pub texel: Texel,
     pub material: &'a Material,
 }
 
@@ -18,7 +19,7 @@ impl Intersection<'_> {
     /// Calculate the color of the intersection point
     pub fn get_color(&self, light: &Light, ray: &Ray) -> Color {
         self.material
-            .get_color(&self.point, &self.normal, light, ray)
+            .get_color(&self.point, &self.normal, light, self.texel, ray)
     }
 
     /// Reflect the given ray at the intersection point

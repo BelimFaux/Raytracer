@@ -9,6 +9,7 @@ type Triple = (u32, u32, u32);
 pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     let mut vertices = Vec::new();
     let mut normals = Vec::new();
+    let mut texture = Vec::new();
     let mut triangles = Vec::new();
 
     for (current_line, line) in src.lines().enumerate() {
@@ -21,13 +22,17 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
                 "vn" => {
                     normals.push(parse_point(words.collect()).map_err(|s| err(current_line, &s))?)
                 }
+                "vt" => {
+                    texture.push(parse_texel(words.collect()).map_err(|s| err(current_line, &s))?);
+                }
                 "f" => {
-                    let (verts, norm) =
+                    let (verts, tex, norm) =
                         parse_face(words.collect()).map_err(|s| err(current_line, &s))?;
 
                     let tri = Triangle::new(
                         get_elements(&vertices, verts).map_err(|s| err(current_line, &s))?,
                         get_elements(&normals, norm).map_err(|s| err(current_line, &s))?,
+                        get_elements(&texture, tex).map_err(|s| err(current_line, &s))?,
                     );
                     triangles.push(tri);
                 }
@@ -39,8 +44,11 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     Ok(triangles)
 }
 
-/// Get 3 Points from a slice of points using a triple of indices
-fn get_elements(from: &[Point3], indices: Triple) -> Result<[Point3; 3], String> {
+/// Get 3 elements from a slice using a triple of indices
+fn get_elements<T>(from: &[T], indices: Triple) -> Result<[T; 3], String>
+where
+    T: Copy,
+{
     Ok([
         *from
             .get((indices.0 - 1) as usize)
@@ -57,17 +65,18 @@ fn get_elements(from: &[Point3], indices: Triple) -> Result<[Point3; 3], String>
 /// parse a face line in the format:
 /// `v/vt/vn v/vt/vn v/vt/vn`
 /// where `v` is the vertex index, `vt` is the texture index and `vn` is the normal index
-fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple), String> {
+fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple, Triple), String> {
     if line.len() != 3 {
         return Err(format!("Expected 3 elements but got {}", line.len()));
     }
 
     let mut vertices = [0, 0, 0];
+    let mut texture = [0, 0, 0];
     let mut normals = [0, 0, 0];
 
     for (i, elem) in line.iter().enumerate() {
         let mut parts = elem.split("/");
-        let (v, _t, n) = (parts.next(), parts.next(), parts.next());
+        let (v, t, n) = (parts.next(), parts.next(), parts.next());
         if parts.next().is_some() {
             return Err(String::from("Face data contains more than 3 elements"));
         }
@@ -76,13 +85,18 @@ fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple), String> {
             .parse::<u32>()
             .map_err(|r| r.to_string())?;
 
+        texture[i] = t
+            .ok_or(String::from("Expected texture coordinate data"))?
+            .parse::<u32>()
+            .map_err(|r| r.to_string())?;
+
         normals[i] = n
-            .ok_or(String::from("Expected vertices data"))?
+            .ok_or(String::from("Expected normal data"))?
             .parse::<u32>()
             .map_err(|r| r.to_string())?;
     }
 
-    Ok((vertices.into(), normals.into()))
+    Ok((vertices.into(), texture.into(), normals.into()))
 }
 
 /// parse a single point in the format: `x y z`
@@ -97,6 +111,20 @@ fn parse_point(line: Vec<&str>) -> Result<Point3, String> {
         x.parse::<f32>().map_err(|r| r.to_string())?,
         y.parse::<f32>().map_err(|r| r.to_string())?,
         z.parse::<f32>().map_err(|r| r.to_string())?,
+    ))
+}
+
+/// parse a texel in the format: `u v`
+fn parse_texel(line: Vec<&str>) -> Result<(f32, f32), String> {
+    if line.len() != 2 {
+        return Err(format!("Expected 2 elements but got {}", line.len()));
+    }
+
+    let (u, v) = (&line[0], &line[1]);
+
+    Ok((
+        u.parse::<f32>().map_err(|r| r.to_string())?,
+        v.parse::<f32>().map_err(|r| r.to_string())?,
     ))
 }
 
@@ -154,6 +182,7 @@ mod tests {
                     Vector3::new(0., 0., 1.),
                     Vector3::new(0., 0., 1.),
                 ],
+                [(0., 0.), (10., 0.), (10., 10.)],
             ),
             Triangle::new(
                 [
@@ -166,6 +195,7 @@ mod tests {
                     Vector3::new(0., 0., 1.),
                     Vector3::new(0., 0., 1.),
                 ],
+                [(0., 0.), (10., 10.), (0., 10.)],
             ),
         ];
 

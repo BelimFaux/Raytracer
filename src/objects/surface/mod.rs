@@ -6,9 +6,11 @@ mod mesh;
 mod sphere;
 
 pub use intersection::Intersection;
-pub use material::Material;
+pub use material::{Material, Texture};
 pub use mesh::{Mesh, Triangle};
 pub use sphere::Sphere;
+
+type Texel = (f32, f32);
 
 /// struct to represent any surface in 3D
 /// Either a `Sphere` or a `Mesh`

@@ -1,12 +1,13 @@
 use crate::math::{Point3, Ray, Vector3};
 
-use super::{Intersection, Material};
+use super::{Intersection, Material, Texel};
 
 /// struct to represent a triangle in 3D-Space
 #[derive(Debug, PartialEq)]
 pub struct Triangle {
     points: [Point3; 3],
     normals: [Vector3; 3],
+    texcoords: [Texel; 3],
 }
 
 impl Triangle {
@@ -14,14 +15,26 @@ impl Triangle {
 
     /// Create a new triangle from the edge points and the corresponding normals
     /// The normals and the points should be in the same order in the arrays
-    pub fn new(points: [Point3; 3], normals: [Vector3; 3]) -> Triangle {
-        Triangle { points, normals }
+    pub fn new(points: [Point3; 3], normals: [Vector3; 3], texcoords: [Texel; 3]) -> Triangle {
+        Triangle {
+            points,
+            normals,
+            texcoords,
+        }
     }
 
     /// Return the normal for the given barycentric coordinates
-    /// for flat shading this is constant
-    fn normal_at(&self, _u: f32, _v: f32) -> Vector3 {
-        (self.normals[0] + self.normals[1] + self.normals[2]) / 3.
+    fn normal_at(&self, a: f32, b: f32) -> Vector3 {
+        (1. - a - b) * self.normals[0] + a * self.normals[1] + b * self.normals[2]
+    }
+
+    /// Return the texel at the given barycentric coordinates
+    fn texel_at(&self, a: f32, b: f32) -> (f32, f32) {
+        let t = self.texcoords;
+        (
+            ((1. - a - b) * t[0].0 + a * t[1].0 + b * t[2].0) % 1.,
+            ((1. - a - b) * t[0].1 + a * t[1].1 + b * t[2].1) % 1.,
+        )
     }
 
     /// Test if the triangle intersects with the ray
@@ -29,8 +42,8 @@ impl Triangle {
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
-        let pvec = with.dir().cross(&e2);
-        let det = e1.dot(&pvec);
+        let dxe2 = with.dir().cross(&e2);
+        let det = e1.dot(&dxe2);
 
         if det.abs() < Self::INTERSECT_EPS {
             return false;
@@ -38,31 +51,31 @@ impl Triangle {
 
         let inv_det = 1. / det;
 
-        let tvec = *with.orig() - self.points[0];
-        let u = tvec.dot(&pvec) * inv_det;
-        if !(0. ..=1.).contains(&u) {
+        let s = *with.orig() - self.points[0];
+        let a = s.dot(&dxe2) * inv_det;
+        if !(0. ..=1.).contains(&a) {
             return false;
         }
 
-        let qvec = tvec.cross(&e1);
-        let v = with.dir().dot(&qvec) * inv_det;
-        if v < 0. || u + v > 1. {
+        let sxe1 = s.cross(&e1);
+        let b = with.dir().dot(&sxe1) * inv_det;
+        if b < 0. || a + b > 1. {
             return false;
         }
 
-        let t = e2.dot(&qvec) * inv_det;
+        let t = e2.dot(&sxe1) * inv_det;
 
         with.t_in_range(t)
     }
 
-    /// Calculates the intersection of the triangle and the `with` Ray if present
+    /// Calculates the normal, the texel and the t value of the triangle and the `with` Ray if present
     /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
     /// Returns `None` if there is no intersection
-    pub fn intersection(&self, with: &Ray) -> Option<(Vector3, f32)> {
+    pub fn intersection(&self, with: &Ray) -> Option<(Vector3, Texel, f32)> {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
-        let pvec = with.dir().cross(&e2);
-        let det = e1.dot(&pvec);
+        let dxe2 = with.dir().cross(&e2);
+        let det = e1.dot(&dxe2);
 
         if det.abs() < Self::INTERSECT_EPS {
             return None;
@@ -70,22 +83,22 @@ impl Triangle {
 
         let inv_det = 1. / det;
 
-        let tvec = *with.orig() - self.points[0];
-        let u = tvec.dot(&pvec) * inv_det;
-        if !(0. ..=1.).contains(&u) {
+        let s = *with.orig() - self.points[0];
+        let a = s.dot(&dxe2) * inv_det;
+        if !(0. ..=1.).contains(&a) {
             return None;
         }
 
-        let qvec = tvec.cross(&e1);
-        let v = with.dir().dot(&qvec) * inv_det;
-        if v < 0. || u + v > 1. {
+        let sxe1 = s.cross(&e1);
+        let b = with.dir().dot(&sxe1) * inv_det;
+        if b < 0. || a + b > 1. {
             return None;
         }
 
-        let t = e2.dot(&qvec) * inv_det;
+        let t = e2.dot(&sxe1) * inv_det;
 
         if with.t_in_range(t) {
-            Some((self.normal_at(u, v), t))
+            Some((self.normal_at(a, b), self.texel_at(a, b), t))
         } else {
             None
         }
@@ -180,7 +193,7 @@ impl Mesh {
             return None;
         }
 
-        let (n, t) = self
+        let (normal, texel, t) = self
             .triangles
             .iter()
             .filter_map(|t| t.intersection(with))
@@ -189,7 +202,8 @@ impl Mesh {
         Some(Intersection {
             point: with.at(t)?,
             t,
-            normal: n,
+            normal,
+            texel,
             material: &self.material,
         })
     }
@@ -210,12 +224,13 @@ mod tests {
                 Point3::new(0., 1., -1.),
             ],
             [Vector3::zero(); 3],
+            [(0., 0.); 3],
         );
 
         // should hit the triangle at point (0, 0, -1)
         let hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
         assert!(triangle.has_intersection(&hit));
-        assert!(triangle.intersection(&hit).is_some_and(|(_, t)| t == 1.));
+        assert!(triangle.intersection(&hit).is_some_and(|(_, _, t)| t == 1.));
 
         let no_hit = Ray::new(Point3::zero(), Vector3::new(0., 1., 1.));
         assert!(!triangle.has_intersection(&no_hit));

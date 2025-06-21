@@ -1,12 +1,33 @@
 use crate::{
+    image::Image,
     math::{max, Color, Point3, Ray, Vector3},
     objects::Light,
 };
 
+use super::Texel;
+
+/// Texture that defines the color of a material
+/// can be either a solid color or a defined by an image
+#[derive(Clone, Debug)]
+pub enum Texture {
+    Color(Color),
+    Image(Image),
+}
+
+impl Texture {
+    /// return the color at a given texel
+    pub fn get_color(&self, texel: Texel) -> Color {
+        match self {
+            Texture::Color(c) => *c,
+            Texture::Image(i) => Color::from(i.get_pixel(texel.0, texel.1)),
+        }
+    }
+}
+
 /// Struct to represent a Material
 #[derive(Clone, Debug)]
 pub struct Material {
-    color: Color,
+    texture: Texture,
     reflectance: f32,
     transmittance: f32,
     refraction: f32,
@@ -19,14 +40,14 @@ pub struct Material {
 impl Material {
     /// Create a new material
     pub fn new(
-        color: Color,
+        texture: Texture,
         reflectance: f32,
         transmittance: f32,
         refraction: f32,
         phong: (f32, f32, f32, u32),
     ) -> Material {
         Material {
-            color,
+            texture,
             reflectance,
             transmittance,
             refraction,
@@ -44,10 +65,11 @@ impl Material {
         neg_light: &Vector3,
         vnormal: &Vector3,
         neg_veye: &Vector3,
+        texel: Texel,
     ) -> Color {
         let l = Vector3::normal(neg_light);
         let n = -Vector3::normal(vnormal);
-        let diffuse = *light_color * self.color * self.kd * max(l.dot(&n), 0.0);
+        let diffuse = *light_color * self.texture.get_color(texel) * self.kd * max(l.dot(&n), 0.0);
         let r = Vector3::reflect(&l, &n);
         let e = -Vector3::normal(neg_veye);
         let specular = *light_color * self.ks * max(e.dot(&r), 0.0).powf(self.exp as f32);
@@ -55,13 +77,22 @@ impl Material {
     }
 
     /// Calculate the color for the given light source when hitting a point with this material with a ray
-    pub fn get_color(&self, point: &Point3, normal: &Vector3, light: &Light, ray: &Ray) -> Color {
+    pub fn get_color(
+        &self,
+        point: &Point3,
+        normal: &Vector3,
+        light: &Light,
+        texel: Texel,
+        ray: &Ray,
+    ) -> Color {
         match light {
-            Light::Ambient { color } => *color * self.color * self.ka,
-            Light::Parallel { color, direction } => self.phong(color, direction, normal, ray.dir()),
+            Light::Ambient { color } => *color * self.texture.get_color(texel) * self.ka,
+            Light::Parallel { color, direction } => {
+                self.phong(color, direction, normal, ray.dir(), texel)
+            }
             Light::Point { color, position } => {
                 let dir = *point - *position;
-                self.phong(color, &dir, normal, ray.dir())
+                self.phong(color, &dir, normal, ray.dir(), texel)
             }
         }
     }

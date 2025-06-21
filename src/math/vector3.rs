@@ -28,6 +28,14 @@ impl Color {
         let b = (255.999 * self.z.clamp(0.0, 1.0)) as u8;
         [r, g, b]
     }
+
+    /// Construct a color with values in range 0..1 from an Rgb value with values in range 0..255
+    pub fn from(rgb: image::Rgb) -> Color {
+        let r = rgb[0] as f32 / 255.999;
+        let g = rgb[1] as f32 / 255.999;
+        let b = rgb[2] as f32 / 255.999;
+        Color { x: r, y: g, z: b }
+    }
 }
 
 impl Vector3 {

@@ -1,8 +1,9 @@
 use std::{fs, path::PathBuf};
 
 use crate::{
+    image::Image,
     math::{to_radians, Color, Vector3},
-    objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface},
+    objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface, Texture},
 };
 use serde::Deserialize;
 
@@ -36,7 +37,6 @@ pub(super) struct Resolution {
 
 #[derive(Debug, Deserialize)]
 pub(super) struct MaxBounces {
-    #[allow(unused)]
     #[serde(rename = "@n")]
     n: u32,
 }
@@ -62,25 +62,21 @@ pub(super) struct MaterialSolid {
     color: Color,
     phong: Phong,
     reflectance: Reflectance,
-    #[allow(unused)]
     transmittance: Transmittance,
-    #[allow(unused)]
     refraction: Refraction,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct MaterialTextured {
-    texture: Texture,
+    texture: SerialTexture,
     phong: Phong,
     reflectance: Reflectance,
     transmittance: Transmittance,
     refraction: Refraction,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
-pub(super) struct Texture {
+pub(super) struct SerialTexture {
     #[serde(rename = "@name")]
     name: String,
 }
@@ -103,31 +99,42 @@ impl From<Phong> for (f32, f32, f32, u32) {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Reflectance {
     #[serde(rename = "@r")]
     r: f32,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Transmittance {
     #[serde(rename = "@t")]
     t: f32,
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Refraction {
     #[serde(rename = "@iof")]
     iof: f32,
 }
 
+impl MaterialTextured {
+    fn convert_to_material(self, path: &mut PathBuf) -> Result<Material, InputError> {
+        path.set_file_name(self.texture.name);
+        let image = Image::load_png(path)?;
+        Ok(Material::new(
+            Texture::Image(image),
+            self.reflectance.r,
+            self.transmittance.t,
+            self.refraction.iof,
+            (self.phong.ka, self.phong.kd, self.phong.ks, self.phong.exp),
+        ))
+    }
+}
+
 impl From<MaterialSolid> for Material {
     fn from(inp: MaterialSolid) -> Material {
         Material::new(
-            inp.color,
+            Texture::Color(inp.color),
             inp.reflectance.r,
             inp.transmittance.t,
             inp.refraction.iof,
@@ -187,12 +194,12 @@ pub(super) enum SerialSurface {
         #[allow(unused)]
         transform: Option<TransformList>,
     },
-    #[allow(unused)]
     Mesh {
         #[serde(rename = "@name")]
         name: String,
         material_solid: Option<MaterialSolid>,
         material_textured: Option<MaterialTextured>,
+        #[allow(unused)]
         transform: Option<TransformList>,
     },
 }
@@ -227,28 +234,33 @@ impl SerialSurface {
             SerialSurface::Mesh {
                 name,
                 material_solid,
-                material_textured: _,
+                material_textured,
                 transform: _,
             } => {
                 path.set_file_name(&name);
-                let file = fs::read_to_string(path).map_err(|err| {
+                let file = fs::read_to_string(&mut *path).map_err(|err| {
                     InputError::new(format!(
                         "Error while reading file '{}':\n    {}",
                         &name, err
                     ))
                 })?;
+                let material = if let Some(m) = material_solid {
+                    m.into()
+                } else {
+                    material_textured
+                        .map(|m| m.convert_to_material(path))
+                        .ok_or(InputError::new(format!(
+                            "Error while reading file '{}':\n    No material was given.",
+                            path.to_str().unwrap_or("<INVALID PATH>")
+                        )))??
+                };
                 let triangles = parse(file).map_err(|err| {
                     InputError::new(format!(
                         "Error while parsing file '{}':\n    {}",
                         &name, err
                     ))
                 })?;
-                Ok(Surface::Mesh(Mesh::new(
-                    triangles,
-                    material_solid
-                        .expect("Only solid materials are implemented")
-                        .into(),
-                )))
+                Ok(Surface::Mesh(Mesh::new(triangles, material)))
             }
         }
     }

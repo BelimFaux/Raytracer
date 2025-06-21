@@ -54,6 +54,7 @@ impl Sphere {
             point: p?,
             t,
             normal: n,
+            texel: (0., 0.),
             material: &self.material,
         })
     }
@@ -61,7 +62,10 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::{Color, Vector3};
+    use crate::{
+        math::{Color, Vector3},
+        objects::Texture,
+    };
 
     use super::*;
 
@@ -70,7 +74,13 @@ mod tests {
         let sphere = Sphere::new(
             Point3::new(0., 0., -1.),
             0.5,
-            Material::new(Color::new(0., 0., 0.), 0., 0., 0., (0., 0., 0., 1)),
+            Material::new(
+                Texture::Color(Color::new(0., 0., 0.)),
+                0.,
+                0.,
+                0.,
+                (0., 0., 0., 1),
+            ),
         );
 
         let two_hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
