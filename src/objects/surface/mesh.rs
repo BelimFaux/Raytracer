@@ -197,7 +197,7 @@ impl Mesh {
             .triangles
             .iter()
             .filter_map(|t| t.intersection(with))
-            .min_by(|lhs, rhs| lhs.1.partial_cmp(&rhs.1).expect("t should not be NaN"))?;
+            .min_by(|lhs, rhs| lhs.2.partial_cmp(&rhs.2).expect("t should not be NaN"))?;
 
         Some(Intersection {
             point: with.at(t)?,

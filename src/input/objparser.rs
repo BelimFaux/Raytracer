@@ -13,7 +13,7 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     let mut triangles = Vec::new();
 
     for (current_line, line) in src.lines().enumerate() {
-        let mut words = line.trim().split(" ");
+        let mut words = line.split_whitespace();
         if let Some(t) = words.next() {
             match t {
                 "v" => {
@@ -29,10 +29,16 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
                     let (verts, tex, norm) =
                         parse_face(words.collect()).map_err(|s| err(current_line, &s))?;
 
+                    let texcoords = if tex != (0, 0, 0) {
+                        get_elements(&texture, tex).map_err(|s| err(current_line, &s))?
+                    } else {
+                        [(0., 0.); 3]
+                    };
+
                     let tri = Triangle::new(
                         get_elements(&vertices, verts).map_err(|s| err(current_line, &s))?,
                         get_elements(&normals, norm).map_err(|s| err(current_line, &s))?,
-                        get_elements(&texture, tex).map_err(|s| err(current_line, &s))?,
+                        texcoords,
                     );
                     triangles.push(tri);
                 }
@@ -88,7 +94,7 @@ fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple, Triple), String> {
         texture[i] = t
             .ok_or(String::from("Expected texture coordinate data"))?
             .parse::<u32>()
-            .map_err(|r| r.to_string())?;
+            .unwrap_or_default();
 
         normals[i] = n
             .ok_or(String::from("Expected normal data"))?

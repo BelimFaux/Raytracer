@@ -25,16 +25,6 @@
         </point_light>
     </lights>
     <surfaces>
-        <sphere radius="0.5">
-            <position x="0.0" y="1.0" z="-6.0"/>
-            <material_solid>
-                <color r="0.3" g="0.3" b="0.6"/>
-                <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
-                <reflectance r="0.0"/>
-                <transmittance t="0.0"/>
-                <refraction iof="2.0"/>
-            </material_solid>
-        </sphere>
         <sphere radius="1.0">
             <position x="0.0" y="1.0" z="-3.0"/>
             <material_solid>
@@ -45,14 +35,23 @@
                 <refraction iof="2.0"/>
             </material_solid>
         </sphere>
+        <mesh name="queen.obj">
+            <material_textured>
+                <texture name="queen.png" />
+                <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
+                <reflectance r="0.2"/>
+                <transmittance t="0.0"/>
+                <refraction iof="2.0"/>
+            </material_textured>
+        </mesh>
         <mesh name="open_room.obj">
-            <material_solid>
-                <color r="0.3" g="0.6" b="0.3"/>
+            <material_textured>
+                <texture name="mramor6x6.png"/>
                 <phong ka="0.3" kd="0.9" ks="1.0" exponent="20"/>
                 <reflectance r="0.0"/>
                 <transmittance t="0.0"/>
                 <refraction iof="0.0"/>
-            </material_solid>
+            </material_textured>
         </mesh>
     </surfaces>
 </scene>
