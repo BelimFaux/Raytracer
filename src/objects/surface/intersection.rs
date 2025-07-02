@@ -1,5 +1,5 @@
 use crate::{
-    math::{reflect, Color, Point3, Ray, Vector3, BIAS},
+    math::{Color, Point3, Ray, Vector3, BIAS},
     objects::Light,
 };
 
@@ -24,7 +24,7 @@ impl Intersection<'_> {
 
     /// Reflect the given ray at the intersection point
     pub fn reflected_ray(&self, ray: &Ray) -> Ray {
-        let dir = reflect(*ray.dir(), self.normal);
+        let dir = Vector3::reflect(ray.dir(), &self.normal);
         Ray::new(self.point + BIAS * dir, dir)
     }
 

@@ -7,7 +7,7 @@ use super::{Intersection, Material};
 pub struct Sphere {
     center: Point3,
     radius: f32,
-    material: Material,
+    material: Box<Material>, // box to keep the type small
 }
 
 impl Sphere {
@@ -16,7 +16,7 @@ impl Sphere {
         Sphere {
             center,
             radius,
-            material,
+            material: Box::new(material),
         }
     }
 

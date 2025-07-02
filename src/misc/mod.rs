@@ -9,8 +9,8 @@ pub struct ProgressBar {
 }
 
 impl ProgressBar {
-    const FULL_CHAR: &str = "#";
-    const EMPTY_CHAR: &str = "-";
+    const FULL_CHAR: &'static str = "#";
+    const EMPTY_CHAR: &'static str = "-";
 
     /// Create a new ProgressBar with the given maximum
     pub fn new(max: usize) -> ProgressBar {

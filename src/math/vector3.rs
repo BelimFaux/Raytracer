@@ -22,6 +22,7 @@ pub type Color = Vector3;
 impl Color {
     /// Convert a color with values in range 0 to 1 to an RGB value with values from 0 to 255
     /// The components get clamped at 0 and 1
+    #[inline]
     pub fn to_rgb(self) -> image::Rgb {
         let r = (255.999 * self.x.clamp(0.0, 1.0)) as u8;
         let g = (255.999 * self.y.clamp(0.0, 1.0)) as u8;
@@ -30,6 +31,7 @@ impl Color {
     }
 
     /// Construct a color with values in range 0..1 from an Rgb value with values in range 0..255
+    #[inline]
     pub fn from(rgb: image::Rgb) -> Color {
         let r = rgb[0] as f32 / 255.999;
         let g = rgb[1] as f32 / 255.999;
@@ -40,11 +42,13 @@ impl Color {
 
 impl Vector3 {
     /// Create a new Vector from 3 floats
+    #[inline]
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3 { x, y, z }
     }
 
     /// Create a normal from a vector
+    #[inline]
     pub fn normal(from: &Vector3) -> Vector3 {
         let length = from.length();
         Vector3 {
@@ -55,6 +59,7 @@ impl Vector3 {
     }
 
     /// Creates a Vector with all components = 0
+    #[inline]
     pub fn zero() -> Vector3 {
         Vector3 {
             x: 0.,
@@ -64,11 +69,13 @@ impl Vector3 {
     }
 
     /// computes the dot product
+    #[inline]
     pub fn dot(&self, rhs: &Vector3) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     /// computes the cross product of self x rhs (not commutative)
+    #[inline]
     pub fn cross(&self, rhs: &Vector3) -> Vector3 {
         Vector3 {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -78,23 +85,27 @@ impl Vector3 {
     }
 
     /// returnes the length of the vector
+    #[inline]
     pub fn length(&self) -> f32 {
         f32::sqrt(self.length_squared())
     }
 
     /// returnes the square of the length of the vector
     /// more efficient for comparisons
+    #[inline]
     pub fn length_squared(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     /// normalize the vector
+    #[inline]
     pub fn normalize(&mut self) {
         *self /= self.length();
     }
 
     /// calculate the reflection direction from the given incident vector `i` and the normal `n`
     /// `i - 2.0 * dot(n, i) * n`
+    #[inline]
     pub fn reflect(i: &Vector3, n: &Vector3) -> Vector3 {
         *i - 2.0 * n.dot(i) * *n
     }

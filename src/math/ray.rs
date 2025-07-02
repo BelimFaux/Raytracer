@@ -10,6 +10,7 @@ pub struct Ray {
 
 impl Ray {
     /// Create a new ray
+    #[inline]
     pub fn new(origin: Point3, direction: Vector3) -> Ray {
         Ray {
             origin,
@@ -19,6 +20,7 @@ impl Ray {
     }
 
     /// Adds a maximum bound to the ray
+    #[inline]
     pub fn set_bounds(self, max_t: f32) -> Ray {
         Ray {
             origin: self.origin,
@@ -28,6 +30,7 @@ impl Ray {
     }
 
     /// calculate the point on the ray for `t`
+    #[inline]
     pub fn at(&self, t: f32) -> Option<Point3> {
         if (0.0..=self.max_t).contains(&t) {
             Some(self.origin + t * self.direction)
@@ -36,21 +39,26 @@ impl Ray {
         }
     }
 
+    /// determine if t value is in range for this ray
+    #[inline]
     pub fn t_in_range(&self, t: f32) -> bool {
         (0.0..=self.max_t).contains(&t)
     }
 
     /// get the direction of the ray
+    #[inline]
     pub fn dir(&self) -> &Vector3 {
         &self.direction
     }
 
     /// get the origin of the ray
+    #[inline]
     pub fn orig(&self) -> &Vector3 {
         &self.origin
     }
 
     /// get the maximum t bound
+    #[inline]
     pub fn max_t(&self) -> f32 {
         self.max_t
     }

@@ -8,7 +8,7 @@
         <lookat x="0.0" y="0.0" z="-2.5"/>
         <up x="0.0" y="1.0" z="0.0"/>
         <horizontal_fov angle="45"/>
-        <resolution horizontal="1024" vertical="1024"/>
+        <resolution horizontal="512" vertical="512"/>
         <max_bounces n="8"/>
     </camera>
     <lights>
@@ -36,13 +36,13 @@
             </material_solid>
         </sphere>
         <mesh name="queen.obj">
-            <material_textured>
-                <texture name="queen.png" />
+            <material_solid>
+                <color r="1.0" g="1.0" b="1.0"/>
                 <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
                 <reflectance r="0.2"/>
                 <transmittance t="0.0"/>
                 <refraction iof="2.0"/>
-            </material_textured>
+            </material_solid>
         </mesh>
         <mesh name="open_room.obj">
             <material_textured>

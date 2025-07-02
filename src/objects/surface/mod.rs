@@ -17,7 +17,7 @@ type Texel = (f32, f32);
 #[derive(Debug)]
 pub enum Surface {
     Sphere(Sphere),
-    Mesh(Mesh),
+    Mesh(Box<Mesh>), // Box to keep the enum small
 }
 
 impl Surface {

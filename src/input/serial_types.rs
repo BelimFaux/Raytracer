@@ -260,7 +260,7 @@ impl SerialSurface {
                         &name, err
                     ))
                 })?;
-                Ok(Surface::Mesh(Mesh::new(triangles, material)))
+                Ok(Surface::Mesh(Box::new(Mesh::new(triangles, material))))
             }
         }
     }
