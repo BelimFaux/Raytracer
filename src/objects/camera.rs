@@ -1,4 +1,4 @@
-use crate::math::{Point3, Ray, Vec3};
+use crate::math::{Mat4, Point3, Ray, Vec3};
 
 /// Struct to represent a camera in 3D space
 #[derive(Debug)]
@@ -9,14 +9,15 @@ pub struct Camera {
     fov_t: f32,
     aspect: f32,
     max_bounces: u32,
+    transform: Mat4,
 }
 
 impl Camera {
     /// Create a new camera
     pub fn new(
         pos: Point3,
-        _lookat: Point3,
-        _up: Vec3,
+        lookat: Point3,
+        up: Vec3,
         fov_x: f32,
         horizontal: u32,
         vertical: u32,
@@ -31,6 +32,7 @@ impl Camera {
             fov_t,
             aspect,
             max_bounces,
+            transform: Mat4::look_at(pos, lookat, up),
         }
     }
 
@@ -48,9 +50,11 @@ impl Camera {
         let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
         let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;
 
-        let mut dir = Vec3::new(x, y, -1.);
-        dir.normalize();
+        let pcamera = Vec3::new(x, y, -1.);
+        let pworld = &pcamera * &self.transform;
+        let dir = Vec3::normal(&(pworld - self.center));
+        let orig = &Point3::zero() * &self.transform;
 
-        Ray::new(self.center, dir)
+        Ray::new(orig, dir)
     }
 }

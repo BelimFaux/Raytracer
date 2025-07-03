@@ -1,5 +1,5 @@
 //! objects module
-//! contains objects that lie inside of the scene
+//! contains objects that lie inside the scene
 
 mod camera;
 mod light;
