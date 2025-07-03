@@ -257,3 +257,31 @@ impl Config {
         &self.input_file
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_input_args() {
+        let args= &["test".to_string(), "input.obj".to_string(), "--outdir".to_string(), "output".to_string(), "--ppm".to_string(), "--progress-bar".to_string()];
+
+        let config = Config::build(args).unwrap().unwrap();
+
+        assert_eq!(config.get_input(), "input.obj");
+        assert_eq!(config.outdir(), "output");
+        assert!(config.ppm());
+        assert!(config.progress_bar());
+    }
+
+    #[test]
+    fn help_version_early_exit() {
+       let args = &["test".to_string(), "--help".to_string()];
+        let config = Config::build(args).unwrap();
+        assert!(config.is_none());
+
+        let args = &["test".to_string(), "--version".to_string()];
+        let config = Config::build(args).unwrap();
+        assert!(config.is_none());
+    }
+}

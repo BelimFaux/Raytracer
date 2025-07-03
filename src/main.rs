@@ -3,7 +3,7 @@ use std::{env, path::PathBuf, process, sync::mpsc};
 use lab3::{
     image,
     input::{file_to_scene, Config, InputError},
-    misc::ProgressBar,
+    misc::progress::ProgressBar,
 };
 
 fn main() -> process::ExitCode {
@@ -27,12 +27,12 @@ fn run() -> Result<(), InputError> {
 
     let scene = file_to_scene(config.get_input())?;
     let (width, height) = scene.get_dimensions();
-    let mut imgbuf = image::Image::new(width, height);
+    let mut img = image::Image::new(width, height);
 
     let (tx, rx) = mpsc::channel();
 
     // start thread for printing progress bar
-    // necessary, since `imgbuf.par_init_each_pixel(..)` blocks the mainthread
+    // necessary, since `img.par_init_each_pixel(..)` blocks the main thread
     if config.progress_bar() {
         let mut progress = ProgressBar::new((width * height) as usize);
 
@@ -44,7 +44,7 @@ fn run() -> Result<(), InputError> {
     }
 
     // render image
-    imgbuf.par_init_pixels(|(x, y)| {
+    img.par_init_pixels(|(x, y)| {
         let tx = tx.clone();
         // invert y to 'unflip' the image
         let ret = scene.trace_pixel(*x, height - *y).to_rgb();
@@ -57,9 +57,9 @@ fn run() -> Result<(), InputError> {
     outpath.push(scene.get_output());
 
     if config.ppm() {
-        imgbuf.save_ppm(&mut outpath)?
+        img.save_ppm(&mut outpath)?
     } else {
-        imgbuf.save_png(&mut outpath)?
+        img.save_png(&mut outpath)?
     };
 
     println!(

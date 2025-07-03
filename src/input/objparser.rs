@@ -5,7 +5,7 @@ use super::InputError;
 /// three positive integers
 type Triple = (u32, u32, u32);
 
-/// parses an `.obj` file to a list of triangles
+/// parses a `.obj` file to a list of triangles
 pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     let mut vertices = Vec::new();
     let mut normals = Vec::new();
