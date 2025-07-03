@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf};
 
 use crate::{
     image::Image,
-    math::{to_radians, Color, Vector3},
+    math::{to_radians, Color, Vec3},
     objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface, Texture},
 };
 use serde::Deserialize;
@@ -13,9 +13,9 @@ use super::{objparser::parse, InputError};
 
 #[derive(Debug, Deserialize)]
 pub(super) struct SerialCamera {
-    position: Vector3,
-    lookat: Vector3,
-    up: Vector3,
+    position: Vec3,
+    lookat: Vec3,
+    up: Vec3,
     horizontal_fov: Fov,
     resolution: Resolution,
     max_bounces: MaxBounces,
@@ -187,7 +187,7 @@ pub(super) enum SerialSurface {
     Sphere {
         #[serde(rename = "@radius")]
         radius: f32,
-        position: Vector3,
+        position: Vec3,
         material_solid: Option<MaterialSolid>,
         #[allow(unused)]
         material_textured: Option<MaterialTextured>,
@@ -286,17 +286,17 @@ pub(super) enum SerialLight {
     },
     ParallelLight {
         color: Color,
-        direction: Vector3,
+        direction: Vec3,
     },
     PointLight {
         color: Color,
-        position: Vector3,
+        position: Vec3,
     },
     #[allow(unused)]
     SpotLight {
         color: Color,
-        position: Vector3,
-        direction: Vector3,
+        position: Vec3,
+        direction: Vec3,
         falloff: Falloff,
     },
 }

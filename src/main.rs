@@ -48,7 +48,7 @@ fn run() -> Result<(), InputError> {
         let tx = tx.clone();
         // invert y to 'unflip' the image
         let ret = scene.trace_pixel(*x, height - *y).to_rgb();
-        let _ = tx.send(1u8);
+        let _ = tx.send(());
         ret
     });
 

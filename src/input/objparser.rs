@@ -141,7 +141,7 @@ fn err(current_line: usize, msg: &str) -> InputError {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::Vector3;
+    use crate::math::Vec3;
 
     use super::*;
 
@@ -184,9 +184,9 @@ mod tests {
                     Point3::new(-1., -1., 0.),
                 ],
                 [
-                    Vector3::new(0., 0., 1.),
-                    Vector3::new(0., 0., 1.),
-                    Vector3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
                 ],
                 [(0., 0.), (10., 0.), (10., 10.)],
             ),
@@ -197,9 +197,9 @@ mod tests {
                     Point3::new(1., -1., 0.),
                 ],
                 [
-                    Vector3::new(0., 0., 1.),
-                    Vector3::new(0., 0., 1.),
-                    Vector3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
+                    Vec3::new(0., 0., 1.),
                 ],
                 [(0., 0.), (10., 10.), (0., 10.)],
             ),

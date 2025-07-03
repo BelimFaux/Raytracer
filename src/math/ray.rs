@@ -1,17 +1,17 @@
-use super::{Point3, Vector3};
+use super::{Point3, Vec3};
 
 /// Struct to represent a ray that goes through `origin` in direction `direction`
 /// The ray goes only in the positive direction and can be bounded
 pub struct Ray {
     origin: Point3,
-    direction: Vector3,
+    direction: Vec3,
     max_t: f32,
 }
 
 impl Ray {
     /// Create a new ray
     #[inline]
-    pub fn new(origin: Point3, direction: Vector3) -> Ray {
+    pub fn new(origin: Point3, direction: Vec3) -> Ray {
         Ray {
             origin,
             direction,
@@ -47,13 +47,13 @@ impl Ray {
 
     /// get the direction of the ray
     #[inline]
-    pub fn dir(&self) -> &Vector3 {
+    pub fn dir(&self) -> &Vec3 {
         &self.direction
     }
 
     /// get the origin of the ray
     #[inline]
-    pub fn orig(&self) -> &Vector3 {
+    pub fn orig(&self) -> &Vec3 {
         &self.origin
     }
 
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn point_at_ray() {
-        let ray = Ray::new(Point3::new(1., 0., 0.), Vector3::new(1., 1., 1.));
+        let ray = Ray::new(Point3::new(1., 0., 0.), Vec3::new(1., 1., 1.));
         let p = ray.at(1.5);
 
         let expected = Point3::new(2.5, 1.5, 1.5);
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn point_notat_ray_with_bounds() {
-        let ray = Ray::new(Point3::new(1., 0., 0.), Vector3::new(1., 1., 1.)).set_bounds(1.0);
+        let ray = Ray::new(Point3::new(1., 0., 0.), Vec3::new(1., 1., 1.)).set_bounds(1.0);
         let p = ray.at(1.5);
 
         assert!(p.is_none());

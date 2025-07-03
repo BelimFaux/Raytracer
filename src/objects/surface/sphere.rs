@@ -63,7 +63,7 @@ impl Sphere {
 #[cfg(test)]
 mod tests {
     use crate::{
-        math::{Color, Vector3},
+        math::{Color, Vec3},
         objects::Texture,
     };
 
@@ -83,13 +83,13 @@ mod tests {
             ),
         );
 
-        let two_hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
+        let two_hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(sphere.intersection(&two_hit).is_some());
 
-        let no_hit = Ray::new(Point3::zero(), Vector3::new(0., 1., 1.));
+        let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
         assert!(sphere.intersection(&no_hit).is_none());
 
-        let behind = Ray::new(Point3::zero(), Vector3::new(0., 0., 1.));
+        let behind = Ray::new(Point3::zero(), Vec3::new(0., 0., 1.));
         assert!(sphere.intersection(&behind).is_none())
     }
 }

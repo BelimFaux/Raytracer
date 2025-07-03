@@ -1,6 +1,6 @@
 use crate::{
     image::Image,
-    math::{max, Color, Point3, Ray, Vector3},
+    math::{max, Color, Point3, Ray, Vec3},
     objects::Light,
 };
 
@@ -62,16 +62,16 @@ impl Material {
     fn phong(
         &self,
         light_color: &Color,
-        neg_light: &Vector3,
-        vnormal: &Vector3,
-        neg_veye: &Vector3,
+        neg_light: &Vec3,
+        vnormal: &Vec3,
+        neg_veye: &Vec3,
         texel: Texel,
     ) -> Color {
-        let l = Vector3::normal(neg_light);
-        let n = -Vector3::normal(vnormal);
+        let l = Vec3::normal(neg_light);
+        let n = -Vec3::normal(vnormal);
         let diffuse = *light_color * self.texture.get_color(texel) * self.kd * max(l.dot(&n), 0.0);
-        let r = Vector3::reflect(&l, &n);
-        let e = -Vector3::normal(neg_veye);
+        let r = Vec3::reflect(&l, &n);
+        let e = -Vec3::normal(neg_veye);
         let specular = *light_color * self.ks * max(e.dot(&r), 0.0).powf(self.exp as f32);
         diffuse + specular
     }
@@ -80,7 +80,7 @@ impl Material {
     pub fn get_color(
         &self,
         point: &Point3,
-        normal: &Vector3,
+        normal: &Vec3,
         light: &Light,
         texel: Texel,
         ray: &Ray,

@@ -1,5 +1,5 @@
 use crate::{
-    math::{Color, Point3, Ray, Vector3, BIAS},
+    math::{Color, Point3, Ray, Vec3, BIAS},
     objects::Light,
 };
 
@@ -10,7 +10,7 @@ use super::{Material, Texel};
 pub struct Intersection<'a> {
     pub point: Point3,
     pub t: f32,
-    pub normal: Vector3,
+    pub normal: Vec3,
     pub texel: Texel,
     pub material: &'a Material,
 }
@@ -24,7 +24,7 @@ impl Intersection<'_> {
 
     /// Reflect the given ray at the intersection point
     pub fn reflected_ray(&self, ray: &Ray) -> Ray {
-        let dir = Vector3::reflect(ray.dir(), &self.normal);
+        let dir = Vec3::reflect(ray.dir(), &self.normal);
         Ray::new(self.point + BIAS * dir, dir)
     }
 

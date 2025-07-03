@@ -1,10 +1,10 @@
-use crate::math::{Color, Point3, Ray, Vector3, BIAS};
+use crate::math::{Color, Point3, Ray, Vec3, BIAS};
 
 /// Enum to represent different types of light
 #[derive(Clone, Debug)]
 pub enum Light {
     Ambient { color: Color },
-    Parallel { color: Color, direction: Vector3 },
+    Parallel { color: Color, direction: Vec3 },
     Point { color: Color, position: Point3 },
 }
 
@@ -17,7 +17,7 @@ impl Light {
                 color: _,
                 direction,
             } => {
-                let direction = -Vector3::normal(direction);
+                let direction = -Vec3::normal(direction);
                 let pos = *from + BIAS * direction;
                 Some(Ray::new(pos, direction))
             }

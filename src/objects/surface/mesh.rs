@@ -1,4 +1,4 @@
-use crate::math::{Point3, Ray, Vector3};
+use crate::math::{Point3, Ray, Vec3};
 
 use super::{Intersection, Material, Texel};
 
@@ -6,7 +6,7 @@ use super::{Intersection, Material, Texel};
 #[derive(Debug, PartialEq)]
 pub struct Triangle {
     points: [Point3; 3],
-    normals: [Vector3; 3],
+    normals: [Vec3; 3],
     texcoords: [Texel; 3],
 }
 
@@ -15,7 +15,7 @@ impl Triangle {
 
     /// Create a new triangle from the edge points and the corresponding normals
     /// The normals and the points should be in the same order in the arrays
-    pub fn new(points: [Point3; 3], normals: [Vector3; 3], texcoords: [Texel; 3]) -> Triangle {
+    pub fn new(points: [Point3; 3], normals: [Vec3; 3], texcoords: [Texel; 3]) -> Triangle {
         Triangle {
             points,
             normals,
@@ -24,7 +24,7 @@ impl Triangle {
     }
 
     /// Return the normal for the given barycentric coordinates
-    fn normal_at(&self, a: f32, b: f32) -> Vector3 {
+    fn normal_at(&self, a: f32, b: f32) -> Vec3 {
         (1. - a - b) * self.normals[0] + a * self.normals[1] + b * self.normals[2]
     }
 
@@ -71,7 +71,7 @@ impl Triangle {
     /// Calculates the normal, the texel and the t value of the triangle and the `with` Ray if present
     /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
     /// Returns `None` if there is no intersection
-    pub fn intersection(&self, with: &Ray) -> Option<(Vector3, Texel, f32)> {
+    pub fn intersection(&self, with: &Ray) -> Option<(Vec3, Texel, f32)> {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
         let dxe2 = with.dir().cross(&e2);
@@ -108,8 +108,8 @@ impl Triangle {
 /// Axis-aligned bounding box (AABB)
 #[derive(Clone, Debug)]
 struct BoundingBox {
-    min: Vector3,
-    max: Vector3,
+    min: Vec3,
+    max: Vec3,
 }
 
 impl BoundingBox {
@@ -126,8 +126,8 @@ impl BoundingBox {
         let max_z = points.iter().map(|p| p[2]).max_by(cmp_f32).unwrap_or(0.);
 
         BoundingBox {
-            min: Vector3::new(min_x, min_y, min_z),
-            max: Vector3::new(max_x, max_y, max_z),
+            min: Vec3::new(min_x, min_y, min_z),
+            max: Vec3::new(max_x, max_y, max_z),
         }
     }
 
@@ -211,7 +211,7 @@ impl Mesh {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::Vector3;
+    use crate::math::Vec3;
 
     use super::*;
 
@@ -223,16 +223,16 @@ mod tests {
                 Point3::new(1., 0., -1.),
                 Point3::new(0., 1., -1.),
             ],
-            [Vector3::zero(); 3],
+            [Vec3::zero(); 3],
             [(0., 0.); 3],
         );
 
         // should hit the triangle at point (0, 0, -1)
-        let hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
+        let hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(triangle.has_intersection(&hit));
         assert!(triangle.intersection(&hit).is_some_and(|(_, _, t)| t == 1.));
 
-        let no_hit = Ray::new(Point3::zero(), Vector3::new(0., 1., 1.));
+        let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
         assert!(!triangle.has_intersection(&no_hit));
         assert!(triangle.intersection(&no_hit).is_none());
     }
@@ -247,8 +247,8 @@ mod tests {
 
         let aabb = BoundingBox::from(points);
 
-        assert_eq!(aabb.min, Vector3::new(-1., 0., -1.));
-        assert_eq!(aabb.max, Vector3::new(1., 1., -1.));
+        assert_eq!(aabb.min, Vec3::new(-1., 0., -1.));
+        assert_eq!(aabb.max, Vec3::new(1., 1., -1.));
     }
 
     #[test]
@@ -264,10 +264,10 @@ mod tests {
 
         let aabb = BoundingBox::from(points);
 
-        let hit = Ray::new(Point3::zero(), Vector3::new(0., 0., -1.));
+        let hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(aabb.has_intersection(&hit));
 
-        let no_hit = Ray::new(Point3::zero(), Vector3::new(0., 1., 1.));
+        let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
         assert!(!aabb.has_intersection(&no_hit));
     }
 }

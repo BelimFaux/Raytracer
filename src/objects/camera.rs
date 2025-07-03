@@ -1,4 +1,4 @@
-use crate::math::{Point3, Ray, Vector3};
+use crate::math::{Point3, Ray, Vec3};
 
 /// Struct to represent a camera in 3D space
 #[derive(Debug)]
@@ -16,7 +16,7 @@ impl Camera {
     pub fn new(
         pos: Point3,
         _lookat: Point3,
-        _up: Vector3,
+        _up: Vec3,
         fov_x: f32,
         horizontal: u32,
         vertical: u32,
@@ -48,7 +48,7 @@ impl Camera {
         let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
         let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;
 
-        let mut dir = Vector3::new(x, y, -1.);
+        let mut dir = Vec3::new(x, y, -1.);
         dir.normalize();
 
         Ray::new(self.center, dir)
