@@ -1,6 +1,8 @@
-use crate::math::{Point3, Ray};
+use std::f32::consts::PI;
 
-use super::{Intersection, Material};
+use crate::math::{Point3, Ray, Vec3};
+
+use super::{Intersection, Material, Texel};
 
 /// struct to represent a Sphere in 3D-Space
 #[derive(Clone, Debug)]
@@ -36,6 +38,16 @@ impl Sphere {
         h >= 0. && with.t_in_range(-b - h.sqrt())
     }
 
+    /// Compute the texel on the given point on the spheres surface
+    /// Maps the texel according to [this](https://en.wikipedia.org/wiki/UV_mapping#Finding_UV_on_a_sphere) routine
+    fn get_texel_at(&self, p: &Point3) -> Texel {
+        let d = Vec3::normal(&(self.center - *p));
+        let u = 0.5 + (d[0].atan2(d[2])) / (2. * PI);
+        let v = 0.5 - (d[1].asin()) / (PI);
+
+        (u, v)
+    }
+
     /// Calculates the intersection of the sphere and the `with` Ray if present
     /// Returns `None` if there is no intersection
     pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
@@ -54,7 +66,7 @@ impl Sphere {
             point: p?,
             t,
             normal: n,
-            texel: (0., 0.),
+            texel: self.get_texel_at(&p?),
             material: &self.material,
         })
     }

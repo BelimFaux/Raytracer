@@ -222,15 +222,21 @@ impl SerialSurface {
                 radius,
                 position,
                 material_solid,
-                material_textured: _,
+                material_textured,
                 transform: _,
-            } => Ok(Surface::Sphere(Sphere::new(
-                position,
-                radius,
-                material_solid
-                    .expect("Only solid materials are implemented")
-                    .into(),
-            ))),
+            } => {
+                let material = if let Some(m) = material_solid {
+                    m.into()
+                } else {
+                    material_textured
+                        .map(|m| m.convert_to_material(path))
+                        .ok_or(InputError::new(format!(
+                            "Error while reading file '{}':\n    No material was given.",
+                            path.to_str().unwrap_or("<INVALID PATH>")
+                        )))??
+                };
+                Ok(Surface::Sphere(Sphere::new(position, radius, material)))
+            }
             SerialSurface::Mesh {
                 name,
                 material_solid,
