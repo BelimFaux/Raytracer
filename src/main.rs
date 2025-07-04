@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf, process, sync::mpsc};
 
-use lab3::{
+use rt::{
     image,
     input::{file_to_scene, Config, InputError},
     misc::progress::ProgressBar,

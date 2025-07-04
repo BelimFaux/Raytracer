@@ -1,10 +1,10 @@
 [package]
-name = "lab3"
+name = "ray-tracer"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "lab3"
+name = "rt"
 path = "src/lib.rs"
 
 [dependencies]
