@@ -97,9 +97,8 @@ impl Scene {
                     reflected_color = self.recursive_trace(&reflected_ray, depth - 1);
                 }
                 if intersection.get_transmittance() > 0. {
-                    if let Some(refracted_ray) = intersection.refracted_ray(ray) {
-                        refracted_color = self.recursive_trace(&refracted_ray, depth - 1);
-                    }
+                    let refracted_ray = intersection.refracted_ray(ray);
+                    refracted_color = self.recursive_trace(&refracted_ray, depth - 1);
                 }
                 color
                     * max(

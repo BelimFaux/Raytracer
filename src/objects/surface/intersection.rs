@@ -29,9 +29,9 @@ impl Intersection<'_> {
     }
 
     /// Refract the ray at the intersection point
-    /// returns None if total interal refraction happens (no refracted ray has to be sent)
+    /// returns the reflected ray if total interal refraction happens
     /// See [here](https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel.html) for derivation
-    pub fn refracted_ray(&self, ray: &Ray) -> Option<Ray> {
+    pub fn refracted_ray(&self, ray: &Ray) -> Ray {
         let v = ray.dir();
         let mut n = self.normal;
         let mut n_dot_v = n.dot(v);
@@ -50,12 +50,12 @@ impl Intersection<'_> {
         let discr = 1. - (n1_nt * n1_nt) * (1. - (n_dot_v * n_dot_v));
         // total internal refraction
         if discr < 0. {
-            return None;
+            return self.reflected_ray(ray);
         }
 
         let t = n1_nt * (*v + n * n_dot_v) - n * discr.sqrt();
 
-        Some(Ray::new(self.point + BIAS * t, t))
+        Ray::new(self.point + BIAS * t, t)
     }
 
     /// Return the reflectence parameter from the material that was hit

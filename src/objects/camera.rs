@@ -3,7 +3,6 @@ use crate::math::{Mat4, Point3, Ray, Vec3};
 /// Struct to represent a camera in 3D space
 #[derive(Debug)]
 pub struct Camera {
-    center: Point3,
     height: f32,
     width: f32,
     fov_t: f32,
@@ -26,7 +25,6 @@ impl Camera {
         let aspect = vertical as f32 / horizontal as f32;
         let fov_t = fov_x.tan();
         Camera {
-            center: pos,
             height: vertical as f32,
             width: horizontal as f32,
             fov_t,
@@ -51,10 +49,8 @@ impl Camera {
         let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;
 
         let pcamera = Vec3::new(x, y, -1.);
-        let pworld = &pcamera * &self.transform;
-        let dir = Vec3::normal(&(pworld - self.center));
-        let orig = &Point3::zero() * &self.transform;
+        let orig = Point3::zero();
 
-        Ray::new(orig, dir)
+        Ray::new(orig, pcamera).transform(&self.transform).normal()
     }
 }

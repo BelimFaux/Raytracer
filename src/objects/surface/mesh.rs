@@ -1,4 +1,4 @@
-use crate::math::{Point3, Ray, Vec3};
+use crate::math::{max, min, Point3, Ray, Vec3};
 
 use super::{Intersection, Material, Texel};
 
@@ -132,35 +132,67 @@ impl BoundingBox {
     }
 
     /// Determine if bounding box intersects with the ray
-    /// using Andrew Kensler's [ray-AABB algorithm](https://psgraphics.blogspot.com/2016/02/new-simple-ray-box-test-from-andrew.html)
-    /// will fail if any components of the AABBs min or max vectors are NaN
+    /// using [Smits method](https://people.csail.mit.edu/amy/papers/box-jgt.pdf)
     pub fn has_intersection(&self, with: &Ray) -> bool {
-        for a in 0..3 {
-            let inv_d = 1. / with.dir()[a];
-            let mut t0 = (self.min[a] - with.orig()[a]) * inv_d;
-            let mut t1 = (self.max[a] - with.orig()[a]) * inv_d;
+        let (tmin, tmax) = if with.dir()[0] >= 0. {
+            (
+                (self.min[0] - with.orig()[0]) / with.dir()[0],
+                (self.max[0] - with.orig()[0]) / with.dir()[0],
+            )
+        } else {
+            (
+                (self.max[0] - with.orig()[0]) / with.dir()[0],
+                (self.min[0] - with.orig()[0]) / with.dir()[0],
+            )
+        };
 
-            if inv_d < 0. {
-                (t0, t1) = (t1, t0);
-            }
+        let (tymin, tymax) = if with.dir()[1] >= 0. {
+            (
+                (self.min[1] - with.orig()[1]) / with.dir()[1],
+                (self.max[1] - with.orig()[1]) / with.dir()[1],
+            )
+        } else {
+            (
+                (self.max[1] - with.orig()[1]) / with.dir()[1],
+                (self.min[1] - with.orig()[1]) / with.dir()[1],
+            )
+        };
 
-            let tmin = if t0 > 0. { t0 } else { 0.0 };
-            let tmax = if t1 < with.max_t() { t1 } else { with.max_t() };
-
-            if tmax <= tmin {
-                return false;
-            }
+        if (tmin > tymax) || (tymin > tmax) {
+            return false;
         }
 
-        true
+        let tmin = max(tmin, tymin);
+        let tmax = min(tmax, tymax);
+
+        let (tzmin, tzmax) = if with.dir()[2] >= 0. {
+            (
+                (self.min[2] - with.orig()[2]) / with.dir()[2],
+                (self.max[2] - with.orig()[2]) / with.dir()[2],
+            )
+        } else {
+            (
+                (self.max[2] - with.orig()[2]) / with.dir()[2],
+                (self.min[2] - with.orig()[2]) / with.dir()[2],
+            )
+        };
+
+        if (tmin > tzmax) || (tzmin > tmax) {
+            return false;
+        }
+
+        let tmin = max(tmin, tzmin);
+        let tmax = min(tmax, tzmax);
+
+        (tmin < with.max_t()) && (tmax > 0.)
     }
 }
 
 /// struct to represent a mesh in a 3D-Space
-/// Holds a Triangel 'soup' and material
+/// Holds a Triangle 'soup' and material
 /// also contains a bounding box to speed up intersection tests
 #[derive(Debug)]
-pub struct Mesh {
+pub(super) struct Mesh {
     triangles: Vec<Triangle>,
     material: Material,
     bounding_box: BoundingBox,

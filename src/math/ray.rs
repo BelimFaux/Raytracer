@@ -1,7 +1,10 @@
+use crate::math::Mat4;
+
 use super::{Point3, Vec3};
 
 /// Struct to represent a ray that goes through `origin` in direction `direction`
 /// The ray goes only in the positive direction and can be bounded
+#[derive(Clone, Copy)]
 pub struct Ray {
     origin: Point3,
     direction: Vec3,
@@ -37,6 +40,20 @@ impl Ray {
         } else {
             None
         }
+    }
+
+    /// Transform the ray with a transformation matrix
+    ///
+    /// the ray direction might not be normalized after, but max_t will stay the same!
+    pub fn transform(&self, t: &Mat4) -> Ray {
+        let orig = t.transform_point(&self.origin);
+        let dir = t.transform_vector(&self.direction);
+        Ray::new(orig, dir).set_bounds(self.max_t)
+    }
+
+    /// Normalize the ray direction
+    pub fn normal(&self) -> Ray {
+        Ray::new(self.origin, Vec3::normal(&self.direction))
     }
 
     /// determine if t value is in range for this ray

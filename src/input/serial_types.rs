@@ -2,8 +2,8 @@ use std::{fs, path::PathBuf};
 
 use crate::{
     image::Image,
-    math::{to_radians, Color, Vec3},
-    objects::{Camera, Light, Material, Mesh, Scene, Sphere, Surface, Texture},
+    math::{to_radians, Color, Mat4, Vec3},
+    objects::{Camera, Light, Material, Scene, Surface, Texture},
 };
 use serde::Deserialize;
 
@@ -47,7 +47,7 @@ impl From<SerialCamera> for Camera {
             inp.position,
             inp.lookat,
             inp.up,
-            to_radians(inp.horizontal_fov.angle),
+            to_radians(inp.horizontal_fov.angle as f32),
             inp.resolution.horizontal,
             inp.resolution.vertical,
             inp.max_bounces.n,
@@ -145,8 +145,7 @@ impl From<MaterialSolid> for Material {
 
 // --- Transform serial types ---
 
-#[allow(unused)]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum Transform {
     Translate {
@@ -179,6 +178,19 @@ pub(super) enum Transform {
     },
 }
 
+impl From<Transform> for Mat4 {
+    /// converts transform to the inverse of the transformation matrix
+    fn from(value: Transform) -> Self {
+        match value {
+            Transform::Translate { x, y, z } => Mat4::from_translation(Vec3::new(-x, -y, -z)),
+            Transform::RotateX { theta } => Mat4::from_x_rotation(to_radians(-theta)),
+            Transform::RotateY { theta } => Mat4::from_y_rotation(to_radians(-theta)),
+            Transform::RotateZ { theta } => Mat4::from_z_rotation(to_radians(-theta)),
+            Transform::Scale { x, y, z } => Mat4::from_scaling(Vec3::new(1. / x, 1. / y, 1. / z)),
+        }
+    }
+}
+
 // --- Surface serial types ---
 
 #[derive(Debug, Deserialize)]
@@ -189,9 +201,7 @@ pub(super) enum SerialSurface {
         radius: f32,
         position: Vec3,
         material_solid: Option<MaterialSolid>,
-        #[allow(unused)]
         material_textured: Option<MaterialTextured>,
-        #[allow(unused)]
         transform: Option<TransformList>,
     },
     Mesh {
@@ -199,17 +209,25 @@ pub(super) enum SerialSurface {
         name: String,
         material_solid: Option<MaterialSolid>,
         material_textured: Option<MaterialTextured>,
-        #[allow(unused)]
         transform: Option<TransformList>,
     },
 }
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct TransformList {
     #[serde(default)]
     #[serde(rename = "$value")]
     transforms: Vec<Transform>,
+}
+
+impl From<TransformList> for Mat4 {
+    /// Calculate the final inverse transformation matrix
+    fn from(value: TransformList) -> Self {
+        value
+            .transforms
+            .iter()
+            .fold(Mat4::identity(), |acc, curr| &curr.clone().into() * &acc)
+    }
 }
 
 impl SerialSurface {
@@ -223,7 +241,7 @@ impl SerialSurface {
                 position,
                 material_solid,
                 material_textured,
-                transform: _,
+                transform,
             } => {
                 let material = if let Some(m) = material_solid {
                     m.into()
@@ -235,13 +253,19 @@ impl SerialSurface {
                             path.to_str().unwrap_or("<INVALID PATH>")
                         )))??
                 };
-                Ok(Surface::Sphere(Sphere::new(position, radius, material)))
+                let mut sphere = Surface::sphere(position, radius, material);
+                if let Some(t) = transform {
+                    let inv_transform = t.into();
+                    let normal_transform = Mat4::transpose(&inv_transform);
+                    sphere.set_transform(inv_transform, normal_transform);
+                }
+                Ok(sphere)
             }
             SerialSurface::Mesh {
                 name,
                 material_solid,
                 material_textured,
-                transform: _,
+                transform,
             } => {
                 path.set_file_name(&name);
                 let file = fs::read_to_string(&mut *path).map_err(|err| {
@@ -266,7 +290,13 @@ impl SerialSurface {
                         &name, err
                     ))
                 })?;
-                Ok(Surface::Mesh(Box::new(Mesh::new(triangles, material))))
+                let mut surface = Surface::mesh(triangles, material);
+                if let Some(t) = transform {
+                    let inv_transform = t.into();
+                    let normal_transform = Mat4::transpose(&inv_transform);
+                    surface.set_transform(inv_transform, normal_transform);
+                }
+                Ok(surface)
             }
         }
     }

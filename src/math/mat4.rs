@@ -8,6 +8,20 @@ pub struct Mat4 {
 }
 
 impl Mat4 {
+    /// create an identity matrix
+    #[inline]
+    pub fn identity() -> Mat4 {
+        #[rustfmt::skip]
+        let vals = [
+            1., 0., 0., 0.,
+            0., 1., 0., 0.,
+            0., 0., 1., 0.,
+            0., 0., 0., 1.,
+        ];
+
+        Mat4 { vals }
+    }
+
     /// create a mat4 look at function for camera transformations
     /// takes in the camera position `from`, the point to look at `at`, and the `up` vector
     #[inline]
@@ -107,29 +121,53 @@ impl Mat4 {
 
         Mat4 { vals }
     }
-}
 
-// -- Operators ---
+    /// Create a matrix that is the transpose of the given matrix
+    #[inline]
+    pub fn transpose(mat: &Mat4) -> Mat4 {
+        let a = mat.vals;
 
-impl ops::Mul<&Mat4> for &Vec3 {
-    type Output = Vec3;
+        #[rustfmt::skip]
+        let vals = [
+            a[0], a[4],  a[8], a[12],
+            a[1], a[5],  a[9], a[13],
+            a[2], a[6], a[10], a[14],
+            a[3], a[7], a[11], a[15],
+        ];
 
-    /// Transform a vec3 with a mat4
-    /// assumes w = 1 for the vector
-    fn mul(self, rhs: &Mat4) -> Self::Output {
-        let m = rhs.vals;
-        let x = self[0];
-        let y = self[1];
-        let z = self[2];
-        let w = m[12] * x + m[13] * y + m[14] * z + m[15];
+        Mat4 { vals }
+    }
+
+    /// Multiply a point (w = 1) with the matrix
+    #[inline]
+    pub fn transform_point(&self, p: &Point3) -> Point3 {
+        self.multiply_vec4([p[0], p[1], p[2], 1.])
+    }
+
+    /// Multiply a vector (w = 0) with the matrix
+    #[inline]
+    pub fn transform_vector(&self, v: &Vec3) -> Vec3 {
+        self.multiply_vec4([v[0], v[1], v[2], 0.])
+    }
+
+    /// Multiply any vec4 with the matrix and return a vec3
+    #[inline]
+    fn multiply_vec4(&self, vec: [f32; 4]) -> Vec3 {
+        let m = self.vals;
+        let x = vec[0];
+        let y = vec[1];
+        let z = vec[2];
+        let w = vec[3];
 
         Vec3::new(
-            (m[0] * x + m[1] * y + m[2] * z + m[3]) / w,
-            (m[4] * x + m[5] * y + m[6] * z + m[7]) / w,
-            (m[8] * x + m[9] * y + m[10] * z + m[11]) / w,
+            m[0] * x + m[1] * y + m[2] * z + m[3] * w,
+            m[4] * x + m[5] * y + m[6] * z + m[7] * w,
+            m[8] * x + m[9] * y + m[10] * z + m[11] * w,
         )
     }
 }
+
+// -- Operators ---
 
 impl ops::Mul<&Mat4> for &Mat4 {
     type Output = Mat4;
@@ -166,6 +204,33 @@ impl ops::Mul<&Mat4> for &Mat4 {
     }
 }
 
+impl ops::MulAssign<&Mat4> for Mat4 {
+    /// Regular matrix multiplication
+    fn mul_assign(&mut self, rhs: &Mat4) {
+        let a = &mut self.vals;
+        let b = rhs.vals;
+
+        *a = [
+            a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12],
+            a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13],
+            a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14],
+            a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15],
+            a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12],
+            a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13],
+            a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14],
+            a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15],
+            a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12],
+            a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13],
+            a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14],
+            a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15],
+            a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12],
+            a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13],
+            a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14],
+            a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15],
+        ];
+    }
+}
+
 // --- Tests ---
 
 #[cfg(test)]
@@ -196,7 +261,7 @@ mod tests {
     #[test]
     fn matrix_multiplication() {
         #[rustfmt::skip]
-        let lhs = Mat4 {
+        let mut lhs = Mat4 {
             vals: [
                 5.,  7., 9., 10.,
                 2.,  3., 3.,  8.,
@@ -226,5 +291,18 @@ mod tests {
         };
 
         assert_eq!(expected, &lhs * &rhs);
+
+        lhs *= &rhs;
+        assert_eq!(expected, lhs);
+    }
+
+    #[test]
+    fn multiply_with_point() {
+        let transform = Mat4::from_scaling(Vec3::new(2., 3., 4.));
+        let p = Point3::new(1.2, 3., 5.);
+
+        let expected = Point3::new(2.4, 9., 20.);
+
+        assert_eq!(expected, transform.transform_point(&p));
     }
 }

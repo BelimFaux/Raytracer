@@ -6,7 +6,7 @@ use super::{Intersection, Material, Texel};
 
 /// struct to represent a Sphere in 3D-Space
 #[derive(Clone, Debug)]
-pub struct Sphere {
+pub(super) struct Sphere {
     center: Point3,
     radius: f32,
     material: Box<Material>, // box to keep the type small
@@ -23,19 +23,47 @@ impl Sphere {
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula
-    /// The ray direction should be normalized
-    fn intersection_coefficients(&self, with: &Ray) -> (f32, f32) {
-        let oc = *with.orig() - self.center;
-        let b = oc.dot(with.dir());
-        let c = oc.dot(&oc) - self.radius * self.radius;
-        let h = b * b - c;
-        (b, h)
+    fn intersection_coefficients(&self, with: &Ray) -> (f32, f32, f32) {
+        let oc = self.center - *with.orig();
+        let a = with.dir().length_squared();
+        let h = with.dir().dot(&oc);
+        let c = oc.length_squared() - self.radius * self.radius;
+        (a, h, c)
     }
 
-    /// Test if the sphere intersects with the ray
+    /// Test if any object intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
-        let (b, h) = self.intersection_coefficients(with);
-        h >= 0. && with.t_in_range(-b - h.sqrt())
+        let (a, h, c) = self.intersection_coefficients(with);
+        let discr = h * h - a * c;
+        discr >= 0. && with.at((h - discr.sqrt()) / a).is_some()
+    }
+
+    /// Calculates the intersection of the sphere and the `with` Ray if present
+    /// The normal in the intersection object will not necessarily be normalized
+    /// Returns `None` if there is no intersection
+    pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
+        let (a, h, c) = self.intersection_coefficients(with);
+        let discr = h * h - a * c;
+        if discr < 0. {
+            return None;
+        }
+
+        let discr = discr.sqrt();
+        let t = if h - discr < 0. {
+            (h + discr) / a
+        } else {
+            (h - discr) / a
+        };
+        let p = with.at(t)?;
+        let n = p - self.center;
+
+        Some(Intersection {
+            point: p,
+            t,
+            normal: n,
+            texel: self.get_texel_at(&p),
+            material: &self.material,
+        })
     }
 
     /// Compute the texel on the given point on the spheres surface
@@ -46,29 +74,6 @@ impl Sphere {
         let v = 0.5 - (d[1].asin()) / (PI);
 
         (u, v)
-    }
-
-    /// Calculates the intersection of the sphere and the `with` Ray if present
-    /// Returns `None` if there is no intersection
-    pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
-        let (b, h) = self.intersection_coefficients(with);
-        if h < 0. {
-            return None;
-        }
-        let h = h.sqrt();
-
-        let t = if -b - h < 0. { -b + h } else { -b - h };
-        let p = with.at(t);
-        let mut n = p? - self.center;
-        n.normalize();
-
-        Some(Intersection {
-            point: p?,
-            t,
-            normal: n,
-            texel: self.get_texel_at(&p?),
-            material: &self.material,
-        })
     }
 }
 

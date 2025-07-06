@@ -9,4 +9,4 @@ mod surface;
 pub use crate::objects::camera::Camera;
 pub use crate::objects::light::Light;
 pub use crate::objects::scene::Scene;
-pub use crate::objects::surface::{Material, Mesh, Sphere, Surface, Texture, Triangle};
+pub use crate::objects::surface::{Material, Surface, Texture, Triangle};
