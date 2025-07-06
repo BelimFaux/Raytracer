@@ -25,7 +25,11 @@ fn run() -> Result<(), InputError> {
     // is safe, since we asserted that config is not None
     let config = unsafe { config.unwrap_unchecked() };
 
-    let scene = file_to_scene(config.get_input())?;
+    let mut scene = file_to_scene(config.get_input())?;
+    if config.cook_torrance() {
+        scene.use_cook_torrance();
+    }
+
     let (width, height) = scene.get_dimensions();
     let mut img = image::Image::new(width, height);
 

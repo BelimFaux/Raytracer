@@ -43,6 +43,13 @@ impl Scene {
         self.camera.get_dimensions()
     }
 
+    /// use the cook torrance model, rather than the phong model for light calculations
+    pub fn use_cook_torrance(&mut self) {
+        self.surfaces
+            .iter_mut()
+            .for_each(|surface| surface.use_cook_torrance());
+    }
+
     /// Boolean test if a ray intersects any surface in the scene
     fn intersects_any(&self, with: &Ray) -> bool {
         self.surfaces

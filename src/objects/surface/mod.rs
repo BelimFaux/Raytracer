@@ -52,6 +52,14 @@ impl Surface {
         }
     }
 
+    /// use the cook torrance model, rather than the phong model for light calculations
+    pub fn use_cook_torrance(&mut self) {
+        match &mut self.obj {
+            Object::Sphere(s) => s.use_cook_torrance(),
+            Object::Mesh(m) => m.use_cook_torrance(),
+        }
+    }
+
     /// Determine if this surface intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let with = if let Some(t) = &self.transform {

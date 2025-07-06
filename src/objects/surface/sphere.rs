@@ -22,6 +22,11 @@ impl Sphere {
         }
     }
 
+    /// use the cook torrance model, rather than the phong model for light calculations
+    pub fn use_cook_torrance(&mut self) {
+        self.material.use_cook_torrance()
+    }
+
     /// Calculates the coefficients (a, h, c) of the intersection formula
     fn intersection_coefficients(&self, with: &Ray) -> (f32, f32, f32) {
         let oc = self.center - *with.orig();

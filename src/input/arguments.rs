@@ -20,7 +20,7 @@ struct CliOption {
 }
 
 /// All cli options that should be parsed
-const OPTIONS: [CliOption; 5] = [
+const OPTIONS: [CliOption; 6] = [
     CliOption {
         long: "ppm",
         description: "Export the image as a ppm",
@@ -41,6 +41,12 @@ const OPTIONS: [CliOption; 5] = [
             default: "output",
             placeholder: "<DIR>",
         },
+    },
+    CliOption {
+        long: "cook-torrance",
+        description: "Use the cook-torrance model instead of phong",
+        short: None,
+        action: OptAction::Toggle,
     },
     CliOption {
         long: "help",
@@ -238,6 +244,10 @@ impl Config {
         self.options.contains_key("ppm")
     }
 
+    pub fn cook_torrance(&self) -> bool {
+        self.options.contains_key("cook-torrance")
+    }
+
     pub fn outdir(&self) -> &str {
         self.options
             .get("outdir")
@@ -264,7 +274,14 @@ mod tests {
 
     #[test]
     fn parse_input_args() {
-        let args= &["test".to_string(), "input.obj".to_string(), "--outdir".to_string(), "output".to_string(), "--ppm".to_string(), "--progress-bar".to_string()];
+        let args = &[
+            "test".to_string(),
+            "input.obj".to_string(),
+            "--outdir".to_string(),
+            "output".to_string(),
+            "--ppm".to_string(),
+            "--progress-bar".to_string(),
+        ];
 
         let config = Config::build(args).unwrap().unwrap();
 
@@ -276,7 +293,7 @@ mod tests {
 
     #[test]
     fn help_version_early_exit() {
-       let args = &["test".to_string(), "--help".to_string()];
+        let args = &["test".to_string(), "--help".to_string()];
         let config = Config::build(args).unwrap();
         assert!(config.is_none());
 
@@ -285,3 +302,4 @@ mod tests {
         assert!(config.is_none());
     }
 }
+
