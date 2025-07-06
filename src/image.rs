@@ -144,23 +144,13 @@ impl Image {
             .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
         let mut w = BufWriter::new(file);
 
-        w.write_all(b"P3\n\n")
-            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
-        w.write_all(format!("{} {} 255\n", self.width, self.height).as_bytes())
+        w.write_all(format!("P6 {} {} 255\n", self.width, self.height).as_bytes())
             .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
 
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let pixel = self
-                    .buf
-                    .get((x + self.width * y) as usize)
-                    .unwrap_or(&[0u8; 3]);
-
-                w.write_all(format!("{} {} {}\n", pixel[0], pixel[1], pixel[2]).as_bytes())
-                    .map_err(|err| {
-                        Self::io_err_to_input_err(err, path, "Error while saving image to")
-                    })?;
-            }
+        for pixel in self.buf.as_slice() {
+            w.write_all(pixel).map_err(|err| {
+                Self::io_err_to_input_err(err, path, "Error while saving image to")
+            })?;
         }
 
         Ok(())
