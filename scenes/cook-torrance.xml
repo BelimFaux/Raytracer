@@ -29,7 +29,7 @@
             <position x="1.5" y="0.0" z="-2.4"/>
             <material_textured>
                 <texture name="mramor6x6.png"/>
-                <phong ka="0.3" kd="0.4" ks="0.6" exponent="200"/>
+                <cook_torrance ka="0.3" ks="0.6" roughness="0.25"/>
                 <reflectance r="0.0"/>
                 <transmittance t="0.0"/>
                 <refraction iof="0.0"/>
@@ -39,7 +39,7 @@
             <position x="-1.0" y="0.5" z="-3.4"/>
             <material_solid>
                 <color r="0.95" g="0.63" b="0.01"/>
-                <phong ka="0.3" kd="0.6" ks="0.4" exponent="200"/>
+                <cook_torrance ka="0.3" ks="0.7" roughness="0.4"/>
                 <reflectance r="0.0"/>
                 <transmittance t="0.0"/>
                 <refraction iof="0.0"/>
@@ -48,7 +48,7 @@
         <mesh name="open_room.obj">
             <material_textured>
                 <texture name="MarbleBeige.png"/>
-                <phong ka="0.3" kd="0.4" ks="1.0" exponent="20"/>
+                <cook_torrance ka="0.3" ks="0.3" roughness="0.6"/>
                 <reflectance r="0.0"/>
                 <transmittance t="0.0"/>
                 <refraction iof="0.0"/>

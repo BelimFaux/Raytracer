@@ -26,47 +26,13 @@ impl Texture {
     }
 }
 
-/// Struct to represent a Material
 #[derive(Clone, Debug)]
-pub struct Material {
-    texture: Texture,
-    reflectance: f32,
-    transmittance: f32,
-    refraction: f32,
-    ka: f32,
-    kd: f32,
-    ks: f32,
-    exp: u32,
-    cook_torrance: bool,
+pub enum ShadingModel {
+    Phong { ka: f32, kd: f32, ks: f32, exp: u32 },
+    CookTorrance { ka: f32, ks: f32, roughness: f32 },
 }
 
-impl Material {
-    /// Create a new material
-    pub fn new(
-        texture: Texture,
-        reflectance: f32,
-        transmittance: f32,
-        refraction: f32,
-        phong: (f32, f32, f32, u32),
-    ) -> Material {
-        Material {
-            texture,
-            reflectance,
-            transmittance,
-            refraction,
-            ka: phong.0,
-            kd: phong.1,
-            ks: phong.2,
-            exp: phong.3,
-            cook_torrance: false,
-        }
-    }
-
-    /// use the cook torrance model, rather than the phong model for light calculations
-    pub fn use_cook_torrance(&mut self) {
-        self.cook_torrance = true
-    }
-
+impl ShadingModel {
     /// part of ggx geometric shadowing
     fn g1(x: Vec3, h: Vec3, n: Vec3, alpha2: f32) -> f32 {
         let xdotn = max(x.dot(&n), 0.0);
@@ -103,60 +69,131 @@ impl Material {
     }
 
     /// Calculates the color according to the [cook-torrance model](https://graphicscompendium.com/references/cook-torrance)
-    fn cook_torrance(
-        &self,
+    fn cook_torrance_color(
+        ctparams: (f32, f32),
         light_color: &Color,
         neg_light: &Vec3,
         vnormal: &Vec3,
         neg_veye: &Vec3,
-        texel: Texel,
+        frag_color: Color,
     ) -> Color {
-        const ALPHA: f32 = 0.25;
-        const ALPHA2: f32 = ALPHA * ALPHA;
+        let (ks, alpha) = ctparams;
+        let alpha2: f32 = alpha * alpha;
         let f0 = Vec3::new(0.56, 0.57, 0.58);
 
         let l = -Vec3::normal(neg_light);
         let n = Vec3::normal(vnormal);
         let e = -Vec3::normal(neg_veye);
         let h = Vec3::normal(&(e + l));
-        let d = self.kd;
-        let s = 1. - d;
+        let s = ks;
+        let d = 1. - s;
 
         let ndotl = max(n.dot(&l), 0.);
         let ndote = max(n.dot(&e), 0.);
 
         // Distribution of the microfacets (GGX)
-        let distribution = Self::d_ggx(n, h, ALPHA2);
+        let distribution = Self::d_ggx(n, h, alpha2);
         // Geometric shadowing function (microfacets shadow or obstruct light)
-        let geo_shadowing = Self::g_ggx(n, h, e, l, ALPHA2);
+        let geo_shadowing = Self::g_ggx(n, h, e, l, alpha2);
         // Fresnel effect
         let fresnel = Self::fresnel(f0, h, e);
 
         // specular reflection using the cook-torrance model: (DGF) / 4 * (n*l) * (n*v)
         let r_s = (distribution * geo_shadowing * fresnel) / max(4.0 * ndotl * ndote, 0.00001); // dont divide by zero
 
-        let diffuse = self.texture.get_color(texel);
+        let diffuse = frag_color;
         let brdf = d * diffuse + s * r_s;
 
         *light_color * ndotl * brdf
     }
 
     /// Calculate the color of the material with a light color
-    fn phong(
+    fn phong_color(
+        phparams: (f32, f32, u32),
+        light_color: &Color,
+        neg_light: &Vec3,
+        vnormal: &Vec3,
+        neg_veye: &Vec3,
+        frag_color: Color,
+    ) -> Color {
+        let (kd, ks, exp) = phparams;
+        let l = Vec3::normal(neg_light);
+        let n = -Vec3::normal(vnormal);
+        let diffuse = *light_color * frag_color * kd * max(l.dot(&n), 0.0);
+        let r = Vec3::reflect(&l, &n);
+        let e = -Vec3::normal(neg_veye);
+        let specular = *light_color * ks * max(e.dot(&r), 0.0).powf(exp as f32);
+        diffuse + specular
+    }
+
+    /// Calculate the color of the material with a light color using the specified shading model
+    pub fn shading_color(
         &self,
         light_color: &Color,
         neg_light: &Vec3,
         vnormal: &Vec3,
         neg_veye: &Vec3,
-        texel: Texel,
+        frag_color: Color,
     ) -> Color {
-        let l = Vec3::normal(neg_light);
-        let n = -Vec3::normal(vnormal);
-        let diffuse = *light_color * self.texture.get_color(texel) * self.kd * max(l.dot(&n), 0.0);
-        let r = Vec3::reflect(&l, &n);
-        let e = -Vec3::normal(neg_veye);
-        let specular = *light_color * self.ks * max(e.dot(&r), 0.0).powf(self.exp as f32);
-        diffuse + specular
+        match self {
+            Self::Phong { ka: _, kd, ks, exp } => Self::phong_color(
+                (*kd, *ks, *exp),
+                light_color,
+                neg_light,
+                vnormal,
+                neg_veye,
+                frag_color,
+            ),
+            Self::CookTorrance {
+                ka: _,
+                ks,
+                roughness,
+            } => Self::cook_torrance_color(
+                (*ks, *roughness),
+                light_color,
+                neg_light,
+                vnormal,
+                neg_veye,
+                frag_color,
+            ),
+        }
+    }
+
+    /// get the ambient coefficent of the shading model
+    pub fn ambient(&self) -> f32 {
+        match self {
+            Self::Phong { ka, .. } => *ka,
+            Self::CookTorrance { ka, .. } => *ka,
+        }
+    }
+}
+
+/// Struct to represent a Material
+#[derive(Clone, Debug)]
+pub struct Material {
+    reflectance: f32,
+    transmittance: f32,
+    refraction: f32,
+    texture: Texture,
+    shading: ShadingModel,
+}
+
+impl Material {
+    /// Create a new material
+    pub fn new(
+        texture: Texture,
+        reflectance: f32,
+        transmittance: f32,
+        refraction: f32,
+        shading: ShadingModel,
+    ) -> Material {
+        Material {
+            texture,
+            reflectance,
+            transmittance,
+            refraction,
+            shading,
+        }
     }
 
     /// Calculate the color for the given light source when hitting a point with this material with a ray
@@ -169,21 +206,25 @@ impl Material {
         ray: &Ray,
     ) -> Color {
         match light {
-            Light::Ambient { color } => *color * self.texture.get_color(texel) * self.ka,
-            Light::Parallel { color, direction } => {
-                if self.cook_torrance {
-                    self.cook_torrance(color, direction, normal, ray.dir(), texel)
-                } else {
-                    self.phong(color, direction, normal, ray.dir(), texel)
-                }
+            Light::Ambient { color } => {
+                *color * self.texture.get_color(texel) * self.shading.ambient()
             }
+            Light::Parallel { color, direction } => self.shading.shading_color(
+                color,
+                direction,
+                normal,
+                ray.dir(),
+                self.texture.get_color(texel),
+            ),
             Light::Point { color, position } => {
                 let dir = *point - *position;
-                if self.cook_torrance {
-                    self.cook_torrance(color, &dir, normal, ray.dir(), texel)
-                } else {
-                    self.phong(color, &dir, normal, ray.dir(), texel)
-                }
+                self.shading.shading_color(
+                    color,
+                    &dir,
+                    normal,
+                    ray.dir(),
+                    self.texture.get_color(texel),
+                )
             }
         }
     }

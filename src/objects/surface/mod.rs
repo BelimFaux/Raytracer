@@ -8,7 +8,7 @@ mod mesh;
 mod sphere;
 
 pub use intersection::Intersection;
-pub use material::{Material, Texture};
+pub use material::{Material, ShadingModel, Texture};
 pub use mesh::Triangle;
 
 type Texel = (f32, f32);
@@ -49,14 +49,6 @@ impl Surface {
         Surface {
             obj: Object::Mesh(Box::new(Mesh::new(triangles, material))),
             transform: None,
-        }
-    }
-
-    /// use the cook torrance model, rather than the phong model for light calculations
-    pub fn use_cook_torrance(&mut self) {
-        match &mut self.obj {
-            Object::Sphere(s) => s.use_cook_torrance(),
-            Object::Mesh(m) => m.use_cook_torrance(),
         }
     }
 

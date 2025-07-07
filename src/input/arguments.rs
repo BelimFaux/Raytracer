@@ -20,16 +20,10 @@ struct CliOption {
 }
 
 /// All cli options that should be parsed
-const OPTIONS: [CliOption; 6] = [
+const OPTIONS: [CliOption; 5] = [
     CliOption {
         long: "ppm",
         description: "Export the image as a ppm",
-        short: None,
-        action: OptAction::Toggle,
-    },
-    CliOption {
-        long: "cook-torrance",
-        description: "Use the cook-torrance model instead of phong",
         short: None,
         action: OptAction::Toggle,
     },
@@ -242,10 +236,6 @@ impl Config {
 
     pub fn ppm(&self) -> bool {
         self.options.contains_key("ppm")
-    }
-
-    pub fn cook_torrance(&self) -> bool {
-        self.options.contains_key("cook-torrance")
     }
 
     pub fn outdir(&self) -> &str {

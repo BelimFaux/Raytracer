@@ -209,11 +209,6 @@ impl Mesh {
         }
     }
 
-    /// use the cook torrance model, rather than the phong model for light calculations
-    pub fn use_cook_torrance(&mut self) {
-        self.material.use_cook_torrance()
-    }
-
     /// Test if the mesh intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
         if !self.bounding_box.has_intersection(with) {

@@ -22,11 +22,6 @@ impl Sphere {
         }
     }
 
-    /// use the cook torrance model, rather than the phong model for light calculations
-    pub fn use_cook_torrance(&mut self) {
-        self.material.use_cook_torrance()
-    }
-
     /// Calculates the coefficients (a, h, c) of the intersection formula
     fn intersection_coefficients(&self, with: &Ray) -> (f32, f32, f32) {
         let oc = self.center - *with.orig();
@@ -86,7 +81,7 @@ impl Sphere {
 mod tests {
     use crate::{
         math::{Color, Vec3},
-        objects::Texture,
+        objects::{ShadingModel, Texture},
     };
 
     use super::*;
@@ -101,7 +96,12 @@ mod tests {
                 0.,
                 0.,
                 0.,
-                (0., 0., 0., 1),
+                ShadingModel::Phong {
+                    ka: 0.,
+                    kd: 0.,
+                    ks: 0.,
+                    exp: 1,
+                },
             ),
         );
 

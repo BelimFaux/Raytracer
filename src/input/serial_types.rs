@@ -3,7 +3,7 @@ use std::{fs, path::PathBuf};
 use crate::{
     image::Image,
     math::{to_radians, Color, Mat4, Vec3},
-    objects::{Camera, Light, Material, Scene, Surface, Texture},
+    objects::{Camera, Light, Material, Scene, ShadingModel, Surface, Texture},
 };
 use serde::Deserialize;
 
@@ -60,7 +60,8 @@ impl From<SerialCamera> for Camera {
 #[derive(Debug, Deserialize)]
 pub(super) struct MaterialSolid {
     color: Color,
-    phong: Phong,
+    #[serde(rename = "$value")]
+    shading: SerialShadingModel,
     reflectance: Reflectance,
     transmittance: Transmittance,
     refraction: Refraction,
@@ -69,7 +70,8 @@ pub(super) struct MaterialSolid {
 #[derive(Debug, Deserialize)]
 pub(super) struct MaterialTextured {
     texture: SerialTexture,
-    phong: Phong,
+    #[serde(rename = "$value")]
+    shading: SerialShadingModel,
     reflectance: Reflectance,
     transmittance: Transmittance,
     refraction: Refraction,
@@ -79,6 +81,23 @@ pub(super) struct MaterialTextured {
 pub(super) struct SerialTexture {
     #[serde(rename = "@name")]
     name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(super) enum SerialShadingModel {
+    CookTorrance(CookTorrance),
+    Phong(Phong),
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct CookTorrance {
+    #[serde(rename = "@ka")]
+    ka: f32,
+    #[serde(rename = "@ks")]
+    ks: f32,
+    #[serde(rename = "@roughness")]
+    roughness: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -93,9 +112,21 @@ pub(super) struct Phong {
     exp: u32,
 }
 
-impl From<Phong> for (f32, f32, f32, u32) {
-    fn from(value: Phong) -> Self {
-        (value.ka, value.kd, value.ks, value.exp)
+impl From<SerialShadingModel> for ShadingModel {
+    fn from(value: SerialShadingModel) -> Self {
+        match value {
+            SerialShadingModel::Phong(p) => ShadingModel::Phong {
+                ka: p.ka,
+                kd: p.kd,
+                ks: p.ks,
+                exp: p.exp,
+            },
+            SerialShadingModel::CookTorrance(c) => ShadingModel::CookTorrance {
+                ka: c.ka,
+                ks: c.ks,
+                roughness: c.roughness,
+            },
+        }
     }
 }
 
@@ -126,7 +157,7 @@ impl MaterialTextured {
             self.reflectance.r,
             self.transmittance.t,
             self.refraction.iof,
-            (self.phong.ka, self.phong.kd, self.phong.ks, self.phong.exp),
+            self.shading.into(),
         ))
     }
 }
@@ -138,7 +169,7 @@ impl From<MaterialSolid> for Material {
             inp.reflectance.r,
             inp.transmittance.t,
             inp.refraction.iof,
-            inp.phong.into(),
+            inp.shading.into(),
         )
     }
 }
@@ -293,6 +324,7 @@ impl SerialSurface {
                 let mut surface = Surface::mesh(triangles, material);
                 if let Some(t) = transform {
                     let inv_transform = t.into();
+                    // normal matrix is the inverse transpose
                     let normal_transform = Mat4::transpose(&inv_transform);
                     surface.set_transform(inv_transform, normal_transform);
                 }

@@ -163,4 +163,49 @@ mod tests {
         assert_eq!(scene.get_output(), "myImage.png");
         assert_eq!(scene.get_dimensions(), (1920, 1080));
     }
+
+    #[test]
+    fn cook_torrance_shading() {
+        let xml = r#"
+        <?xml version="1.0" standalone="no" ?>
+        <!DOCTYPE scene SYSTEM "scene.dtd">
+
+        <scene output_file="myImage.png">
+            <background_color r="1.0" g="0.0" b="0.0"/>
+            <camera>
+                <position x="1.0" y="-2.0E-10" z="-3"/>
+                <lookat x="1" y="2" z="3"/>
+                <up x="1" y="2" z="3"/>
+                <horizontal_fov angle="90"/>
+                <resolution horizontal="1920" vertical="1080"/>
+                <max_bounces n="100"/>
+            </camera>
+            <lights>
+                <ambient_light>
+                    <color r="0.1" g="0.2" b="0.3"/>
+                </ambient_light>
+                <point_light>
+                    <color r="0.1" g="0.2" b="0.3"/>
+                    <position x="1" y="2" z="3"/>
+                </point_light>
+            </lights>
+            <surfaces>
+                <sphere radius="123">
+                    <position x="1" y="2" z="3"/>
+                    <material_solid>
+                        <color r="0.1" g="0.2" b="0.3"/>
+                        <cook_torrance ka="1.0" ks="1.0" roughness="0.2"/>
+                        <reflectance r="1.0"/>
+                        <transmittance t="1.0"/>
+                        <refraction iof="1.0"/>
+                    </material_solid>
+                </sphere>
+            </surfaces>
+        </scene>
+        "#;
+
+        let serial_scene: SerialScene = quick_xml::de::from_str(xml).unwrap();
+
+        assert!(serial_scene.convert_to_scene(&mut PathBuf::new()).is_ok());
+    }
 }
