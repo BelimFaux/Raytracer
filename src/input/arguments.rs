@@ -28,6 +28,12 @@ const OPTIONS: [CliOption; 6] = [
         action: OptAction::Toggle,
     },
     CliOption {
+        long: "cook-torrance",
+        description: "Use the cook-torrance model instead of phong",
+        short: None,
+        action: OptAction::Toggle,
+    },
+    CliOption {
         long: "progress-bar",
         description: "Display a progress bar while rendering",
         short: Some('p'),
@@ -41,12 +47,6 @@ const OPTIONS: [CliOption; 6] = [
             default: "output",
             placeholder: "<DIR>",
         },
-    },
-    CliOption {
-        long: "cook-torrance",
-        description: "Use the cook-torrance model instead of phong",
-        short: None,
-        action: OptAction::Toggle,
     },
     CliOption {
         long: "help",
@@ -302,4 +302,3 @@ mod tests {
         assert!(config.is_none());
     }
 }
-

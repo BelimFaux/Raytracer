@@ -31,6 +31,13 @@ fn run() -> Result<(), InputError> {
     }
 
     let (width, height) = scene.get_dimensions();
+    println!(
+        "Loaded file '{}'; starting render with dimensions: {}x{}.",
+        config.get_input(),
+        width,
+        height
+    );
+
     let mut img = image::Image::new(width, height);
 
     let (tx, rx) = mpsc::channel();
