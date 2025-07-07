@@ -38,7 +38,7 @@
         <mesh name="queen.obj">
             <material_solid>
                 <color r="1.0" g="1.0" b="1.0"/>
-                <phong ka="0.3" kd="0.9" ks="1.0" exponent="200"/>
+                <cook_torrance ka="0.3" ks="0.3" roughness="0.25"/>
                 <reflectance r="0.2"/>
                 <transmittance t="0.0"/>
                 <refraction iof="2.0"/>

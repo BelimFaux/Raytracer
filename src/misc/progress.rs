@@ -37,12 +37,13 @@ impl ProgressBar {
 
         let full = (Self::WIDTH * percent) as usize;
         let empty = Self::WIDTH as usize - full;
-        let full = if full > 0 { full - 1 } else { 0 };
+        let runner = if empty > 0 { Self::RUNNER } else { "" };
+        let empty = if empty > 0 { empty - 1 } else { 0 };
 
         print!(
             "\r[{}{}{}] {:.2}% ({}/{})",
             Self::FULL_CHAR.repeat(full),
-            Self::RUNNER,
+            runner,
             Self::EMPTY_CHAR.repeat(empty),
             percent * 100.,
             self.curr,
