@@ -18,7 +18,16 @@ pub(super) struct SerialCamera {
     up: Vec3,
     horizontal_fov: Fov,
     resolution: Resolution,
+    depth_of_field: Option<DepthOfField>,
     max_bounces: MaxBounces,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct DepthOfField {
+    #[serde(rename = "@focal_length")]
+    focal_length: f32,
+    #[serde(rename = "@aperture")]
+    aperture: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,7 +52,7 @@ pub(super) struct MaxBounces {
 
 impl From<SerialCamera> for Camera {
     fn from(inp: SerialCamera) -> Camera {
-        Camera::new(
+        let mut c = Camera::new(
             inp.position,
             inp.lookat,
             inp.up,
@@ -51,7 +60,11 @@ impl From<SerialCamera> for Camera {
             inp.resolution.horizontal,
             inp.resolution.vertical,
             inp.max_bounces.n,
-        )
+        );
+        if let Some(dof) = inp.depth_of_field {
+            c.add_dof(dof.focal_length, dof.aperture);
+        }
+        c
     }
 }
 

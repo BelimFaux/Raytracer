@@ -12,6 +12,7 @@ png = "0.17.16"
 quick-xml = { version = "0.38.0", features = ["serialize"] }
 serde = { version = "1.0.219", features = ["derive"] }
 rayon = "1.10.0"
+rand = "0.9.1"
 
 [profile.release]
 codegen-units = 1

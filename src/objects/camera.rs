@@ -9,6 +9,7 @@ pub struct Camera {
     aspect: f32,
     max_bounces: u32,
     transform: Mat4,
+    dof: Option<(f32, f32)>,
 }
 
 impl Camera {
@@ -31,7 +32,13 @@ impl Camera {
             aspect,
             max_bounces,
             transform: Mat4::look_at(pos, lookat, up),
+            dof: None,
         }
+    }
+
+    /// Add depth of field parameters to the camera
+    pub fn add_dof(&mut self, focal_distance: f32, aperture: f32) {
+        self.dof = Some((focal_distance, aperture))
     }
 
     /// Return the image dimensions of the camera
@@ -39,6 +46,7 @@ impl Camera {
         (self.width as u32, self.height as u32)
     }
 
+    /// Return the maximum bounces for the camera
     pub fn get_max_bounces(&self) -> u32 {
         self.max_bounces
     }
@@ -51,6 +59,22 @@ impl Camera {
         let pcamera = Vec3::new(x, y, -1.);
         let orig = Point3::zero();
 
-        Ray::new(orig, pcamera).transform(&self.transform).normal()
+        let r = Ray::new(orig, pcamera).transform(&self.transform).normal();
+
+        // offset ray if dof is set
+        if let Some((focal_distance, aperture)) = self.dof {
+            let focal_point = r.at(focal_distance).expect("r should have no max_t");
+            let o = *r.orig()
+                + Vec3::new(
+                    rand::random_range(-aperture..aperture),
+                    rand::random_range(-aperture..aperture),
+                    rand::random_range(-aperture..aperture),
+                );
+            let dir = focal_point - o;
+
+            Ray::new(o, dir).normal()
+        } else {
+            r
+        }
     }
 }
