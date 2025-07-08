@@ -59,22 +59,20 @@ impl Camera {
         let pcamera = Vec3::new(x, y, -1.);
         let orig = Point3::zero();
 
-        let r = Ray::new(orig, pcamera).transform(&self.transform).normal();
-
         // offset ray if dof is set
         if let Some((focal_distance, aperture)) = self.dof {
-            let focal_point = r.at(focal_distance).expect("r should have no max_t");
-            let o = *r.orig()
+            let focal_point = focal_distance * pcamera;
+            let o = orig
                 + Vec3::new(
                     rand::random_range(-aperture..aperture),
                     rand::random_range(-aperture..aperture),
-                    rand::random_range(-aperture..aperture),
+                    0.,
                 );
             let dir = focal_point - o;
 
-            Ray::new(o, dir).normal()
+            Ray::new(o, dir).transform(&self.transform).normal()
         } else {
-            r
+            Ray::new(orig, pcamera).transform(&self.transform).normal()
         }
     }
 }
