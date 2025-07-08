@@ -72,6 +72,12 @@ impl Surface {
         }
     }
 
+    pub fn next_frame(&mut self) {
+        if let Object::Sphere(s) = &mut self.obj {
+            s.increase_radius();
+        }
+    }
+
     /// Determine if this surface intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let with = if let Some(t) = &self.transform {

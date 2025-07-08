@@ -17,6 +17,10 @@ impl Sphere {
         Sphere { center, radius }
     }
 
+    pub fn increase_radius(&mut self) {
+        self.radius += 0.01
+    }
+
     /// Calculates the coefficients (a, h, c) of the intersection formula
     fn intersection_coefficients(&self, with: &Ray) -> (f32, f32, f32) {
         let oc = self.center - *with.orig();

@@ -21,7 +21,7 @@ impl Texture {
     pub fn get_color(&self, texel: Texel) -> Color {
         match self {
             Texture::Color(c) => *c,
-            Texture::Image(i) => Color::from(i.get_pixel(texel.0, texel.1)),
+            Texture::Image(i) => Color::from(i.get_pixel(0, texel.0, texel.1)),
         }
     }
 }

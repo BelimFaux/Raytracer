@@ -2,6 +2,7 @@
 pub struct ProgressBar {
     curr: usize,
     max: usize,
+    msg: String,
     last_percent: f32,
 }
 
@@ -12,9 +13,10 @@ impl ProgressBar {
     const WIDTH: f32 = 50.;
 
     /// Create a new ProgressBar with the given maximum
-    pub fn new(max: usize) -> ProgressBar {
+    pub fn new(max: usize, msg: String) -> ProgressBar {
         print!(
-            "[{}{}] 0.00% (0/{})",
+            "{} [{}{}] 0.00% (0/{})",
+            msg,
             Self::RUNNER,
             Self::EMPTY_CHAR.repeat((Self::WIDTH - 1.) as usize),
             max
@@ -22,8 +24,14 @@ impl ProgressBar {
         ProgressBar {
             curr: 0,
             max,
+            msg,
             last_percent: 0.,
         }
+    }
+
+    pub fn reset(&mut self, msg: String) {
+        self.msg = msg;
+        self.curr = 0;
     }
 
     /// Advances the ProgressBar by 1
@@ -41,7 +49,8 @@ impl ProgressBar {
         let empty = if empty > 0 { empty - 1 } else { 0 };
 
         print!(
-            "\r[{}{}{}] {:.2}% ({}/{})",
+            "\r{} [{}{}{}] {:.2}% ({}/{})",
+            self.msg,
             Self::FULL_CHAR.repeat(full),
             runner,
             Self::EMPTY_CHAR.repeat(empty),

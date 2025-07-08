@@ -25,7 +25,7 @@ fn run() -> Result<(), InputError> {
     // is safe, since we asserted that config is not None
     let config = unsafe { config.unwrap_unchecked() };
 
-    let scene = file_to_scene(config.get_input())?;
+    let mut scene = file_to_scene(config.get_input())?;
     let (width, height) = scene.get_dimensions();
     println!(
         "Loaded file '{}'; starting render with dimensions: {}x{}.",
@@ -34,36 +34,48 @@ fn run() -> Result<(), InputError> {
         height
     );
 
-    let mut img = image::Image::new(width, height);
+    let mut img = image::Image::new(width, height, scene.get_frames());
 
     let (tx, rx) = mpsc::channel();
 
     // start thread for printing progress bar
     // necessary, since `img.par_init_each_pixel(..)` blocks the main thread
     if config.progress_bar() {
-        let mut progress = ProgressBar::new((width * height) as usize);
+        let mut frame = 1;
+        let mut progress = ProgressBar::new((width * height) as usize, String::from("Frame 1:"));
 
         std::thread::spawn(move || {
-            while rx.recv().is_ok() {
-                progress.next();
+            while let Ok(r) = rx.recv() {
+                if r == 1 {
+                    frame += 1;
+                    progress.reset(format!("Frame {}:", frame));
+                } else {
+                    progress.next();
+                }
             }
         });
     }
 
     // render image
-    img.par_init_pixels(|(x, y)| {
-        let tx = tx.clone();
-        // invert y to 'unflip' the image
-        let ret = scene.trace_pixel(*x, height - *y).to_rgb();
-        let _ = tx.send(());
-        ret
-    });
+    for frame in 0..scene.get_frames() {
+        img.par_init_pixels(frame, |(x, y)| {
+            let tx = tx.clone();
+            // invert y to 'unflip' the image
+            let ret = scene.trace_pixel(*x, height - *y).to_rgb();
+            let _ = tx.send(0u8);
+            ret
+        });
+        scene.next_frame();
+        let _ = tx.send(1u8);
+    }
 
     let mut outpath = PathBuf::new();
     outpath.push(config.outdir());
     outpath.push(scene.get_output());
 
-    if config.ppm() {
+    if scene.is_animated() {
+        img.save_apng(&mut outpath)?;
+    } else if config.ppm() {
         img.save_ppm(&mut outpath)?
     } else {
         img.save_png(&mut outpath)?

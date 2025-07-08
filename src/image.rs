@@ -17,17 +17,17 @@ pub type Rgb = [u8; 3];
 pub struct Image {
     width: u32,
     height: u32,
-    buf: Vec<Rgb>,
+    buf: Vec<Vec<Rgb>>,
 }
 
 impl Image {
     /// Create a new Image with the given dimensions
     /// The Image gets initialized black
-    pub fn new(width: u32, height: u32) -> Image {
+    pub fn new(width: u32, height: u32, frames: usize) -> Image {
         Image {
             width,
             height,
-            buf: vec![[0; 3]; (width * height) as usize],
+            buf: vec![vec![[0; 3]; (width * height) as usize]; frames],
         }
     }
 
@@ -54,31 +54,39 @@ impl Image {
         Ok(Image {
             width,
             height,
-            buf: imgbuf,
+            buf: vec![imgbuf],
         })
     }
 
     /// Return the images `Rgb` value at the given Texel `(u, v)`
     /// will panic if `u` or `v` are not in range 0..1
-    pub fn get_pixel(&self, u: f32, v: f32) -> Rgb {
+    pub fn get_pixel(&self, frame: usize, u: f32, v: f32) -> Rgb {
         let (x, y) = (
             (u * self.width as f32) as u32,
             (v * self.height as f32) as u32,
         );
-        *self.buf.get((x + self.width * y) as usize).unwrap()
+        *self
+            .buf
+            .get(frame)
+            .unwrap()
+            .get((x + self.width * y) as usize)
+            .unwrap()
     }
 
     /// Set each pixel from the corresponding x and y value
     /// Will try to use a parallel iterator for better performance
-    pub fn par_init_pixels<OP>(&mut self, op: OP)
+    pub fn par_init_pixels<OP>(&mut self, frame: usize, op: OP)
     where
         OP: Fn(&mut (u32, u32)) -> Rgb + Sync + Send,
     {
+        assert!(self.buf.len() >= frame);
         let mut x = 0;
         let mut y = 0;
 
         let mut coords: Vec<_> = self
             .buf
+            .get(frame)
+            .unwrap()
             .iter()
             .map(|_| {
                 if x < self.width - 1 {
@@ -91,8 +99,8 @@ impl Image {
                 (x, y)
             })
             .collect();
-
-        self.buf = coords.par_iter_mut().map(op).collect();
+        let f = self.buf.get_mut(frame).unwrap();
+        *f = coords.par_iter_mut().map(op).collect();
     }
 
     /// format io error to input error
@@ -102,6 +110,46 @@ impl Image {
             msg,
             path.to_str().unwrap_or("<INVALID_PATH>")
         ))
+    }
+
+    pub fn save_apng(self, path: &mut PathBuf) -> Result<(), InputError> {
+        path.set_extension("png");
+        let file = File::create(&path)
+            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
+        let w = &mut BufWriter::new(file);
+
+        let mut encoder = png::Encoder::new(w, self.width, self.height);
+        encoder.set_color(png::ColorType::Rgb);
+        encoder.set_depth(png::BitDepth::Eight);
+        encoder.set_source_gamma(png::ScaledFloat::from_scaled(45455));
+        let source_chromaticities = png::SourceChromaticities::new(
+            (0.31270, 0.32900),
+            (0.64000, 0.33000),
+            (0.30000, 0.60000),
+            (0.15000, 0.06000),
+        );
+        encoder.set_source_chromaticities(source_chromaticities);
+        encoder
+            .set_animated(self.buf.len() as u32, 0)
+            .map_err(|err| {
+                Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+            })?;
+        encoder.set_frame_delay(1, 30).map_err(|err| {
+            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+        })?;
+        let mut writer = encoder.write_header().map_err(|err| {
+            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+        })?;
+
+        for frame in self.buf {
+            writer
+                .write_image_data(frame.as_flattened())
+                .map_err(|err| {
+                    Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+                })?;
+        }
+
+        Ok(())
     }
 
     /// Saves the image as a png image to the specified path
@@ -128,7 +176,12 @@ impl Image {
         })?;
 
         writer
-            .write_image_data(self.buf.as_flattened())
+            .write_image_data(
+                self.buf
+                    .first()
+                    .expect("image should contain atleast one frame")
+                    .as_flattened(),
+            )
             .map_err(|err| {
                 Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
             })?;
@@ -147,7 +200,12 @@ impl Image {
         w.write_all(format!("P6 {} {} 255\n", self.width, self.height).as_bytes())
             .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
 
-        for pixel in self.buf.as_slice() {
+        for pixel in self
+            .buf
+            .first()
+            .expect("image should contain atleast one frame")
+            .as_slice()
+        {
             w.write_all(pixel).map_err(|err| {
                 Self::io_err_to_input_err(err, path, "Error while saving image to")
             })?;

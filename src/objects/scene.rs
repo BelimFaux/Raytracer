@@ -14,6 +14,8 @@ pub struct Scene {
     camera: Camera,
     lights: Vec<Light>,
     surfaces: Vec<Surface>,
+    frames: usize,
+    curr_frame: usize,
 }
 
 impl Scene {
@@ -32,6 +34,8 @@ impl Scene {
             camera,
             lights,
             surfaces,
+            frames: 1,
+            curr_frame: 1,
         }
     }
 
@@ -44,6 +48,19 @@ impl Scene {
     /// Return a reference to the output file name
     pub fn get_output(&self) -> &str {
         &self.output
+    }
+
+    pub fn is_animated(&self) -> bool {
+        self.frames > 1
+    }
+
+    pub fn get_frames(&self) -> usize {
+        self.frames
+    }
+
+    pub fn next_frame(&mut self) {
+        self.curr_frame += 1;
+        self.surfaces.iter_mut().for_each(|s| s.next_frame());
     }
 
     /// Return the dimensions of the image
