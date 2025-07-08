@@ -3,6 +3,7 @@
 
 <scene output_file="depth_of_field.png">
     <background_color r="0.0" g="0.0" b="0.0"/>
+    <super_sampling samples="16"/>
 
     <!-- Camera -->
     <camera>
@@ -10,7 +11,7 @@
         <lookat x="0.0" y="0.0" z="-3.0"/>
         <up x="0.0" y="1.0" z="0.0"/>
         <horizontal_fov angle="55"/>
-        <depth_of_field focal_length="9.5" aperture="0.1"/>
+        <depth_of_field focal_length="9.5" aperture="0.3"/>
         <resolution horizontal="2048" vertical="2048"/>
         <max_bounces n="8"/>
     </camera>

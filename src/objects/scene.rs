@@ -10,6 +10,7 @@ use super::{
 pub struct Scene {
     output: String,
     background_color: Color,
+    samples: u32,
     camera: Camera,
     lights: Vec<Light>,
     surfaces: Vec<Surface>,
@@ -27,10 +28,17 @@ impl Scene {
         Scene {
             output,
             background_color,
+            samples: 0,
             camera,
             lights,
             surfaces,
         }
+    }
+
+    /// Add the number of samples for the scene
+    /// Setting this to any number other than 0 will enable super-sampling
+    pub fn add_samples(&mut self, samples: u32) {
+        self.samples = samples
     }
 
     /// Return a reference to the output file name
@@ -112,10 +120,25 @@ impl Scene {
         }
     }
 
+    /// trace the pixel with super-sampling
+    /// will panic if `samples` is 0 (0 samples doesn't really make sense, does it?)
+    fn ssaa_trace_pixel(&self, u: u32, v: u32) -> Color {
+        let mut final_color = Color::zero();
+        for _ in 0..self.samples {
+            let ray = self.camera.get_sample_ray_through(u, v);
+            final_color += self.recursive_trace(&ray, self.camera.get_max_bounces());
+        }
+
+        final_color / self.samples as f32
+    }
+
     /// ray trace a pixel
     /// get the camera ray and test the closest intersection with any object
     /// then perform lighting calculations at the closest intersection
     pub fn trace_pixel(&self, u: u32, v: u32) -> Color {
+        if self.samples != 0 {
+            return self.ssaa_trace_pixel(u, v);
+        }
         let ray = self.camera.get_ray_through(u, v);
 
         self.recursive_trace(&ray, self.camera.get_max_bounces())

@@ -51,10 +51,9 @@ impl Camera {
         self.max_bounces
     }
 
-    /// Construct a camera ray through pixel `(u, v)`
-    pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
-        let x = (((2 * u + 1) as f32 / self.width) - 1.) * self.fov_t;
-        let y = (((2 * v + 1) as f32 / self.height) - 1.) * self.fov_t * self.aspect;
+    fn compute_camera_ray(&self, u: f32, v: f32) -> Ray {
+        let x = (((2. * u + 1.) / self.width) - 1.) * self.fov_t;
+        let y = (((2. * v + 1.) / self.height) - 1.) * self.fov_t * self.aspect;
 
         let pcamera = Vec3::new(x, y, -1.);
         let orig = Point3::zero();
@@ -74,5 +73,17 @@ impl Camera {
         } else {
             Ray::new(orig, pcamera).transform(&self.transform).normal()
         }
+    }
+
+    /// Construct a camera ray through pixel `(u, v)`
+    pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
+        self.compute_camera_ray(u as f32, v as f32)
+    }
+
+    /// Return a randomly sampled ray through the pixel `(u, v)`
+    pub fn get_sample_ray_through(&self, u: u32, v: u32) -> Ray {
+        let u = u as f32 + rand::random_range(-0.5..0.5);
+        let v = v as f32 + rand::random_range(-0.5..0.5);
+        self.compute_camera_ray(u, v)
     }
 }

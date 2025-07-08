@@ -400,9 +400,16 @@ pub(super) struct SerialScene {
     #[serde(rename = "@output_file")]
     output_file: String,
     background_color: Color,
+    super_sampling: Option<SuperSampling>,
     camera: SerialCamera,
     lights: LightList,
     surfaces: SurfaceList,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct SuperSampling {
+    #[serde(rename = "@samples")]
+    samples: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -424,7 +431,7 @@ impl SerialScene {
     /// Takes a pathbuf from the path of the xml file, because it will look for other files in the
     /// same directory
     pub fn convert_to_scene(self, path: &mut PathBuf) -> Result<Scene, InputError> {
-        Ok(Scene::new(
+        let mut s = Scene::new(
             self.output_file,
             self.background_color,
             self.camera.into(),
@@ -438,6 +445,11 @@ impl SerialScene {
                 .into_iter()
                 .map(|serial| serial.convert_to_surface(path))
                 .collect::<Result<Vec<_>, InputError>>()?,
-        ))
+        );
+        if let Some(ssaa) = self.super_sampling {
+            s.add_samples(ssaa.samples);
+        }
+
+        Ok(s)
     }
 }

@@ -165,18 +165,20 @@ mod tests {
     }
 
     #[test]
-    fn cook_torrance_shading() {
+    fn extension_parameters_no_panic() {
         let xml = r#"
         <?xml version="1.0" standalone="no" ?>
         <!DOCTYPE scene SYSTEM "scene.dtd">
 
         <scene output_file="myImage.png">
             <background_color r="1.0" g="0.0" b="0.0"/>
+            <super_sampling samples="16" />
             <camera>
                 <position x="1.0" y="-2.0E-10" z="-3"/>
                 <lookat x="1" y="2" z="3"/>
                 <up x="1" y="2" z="3"/>
                 <horizontal_fov angle="90"/>
+                <depth_of_field focal_length="2.5" aperture="0.2" />
                 <resolution horizontal="1920" vertical="1080"/>
                 <max_bounces n="100"/>
             </camera>
