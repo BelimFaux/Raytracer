@@ -1,6 +1,6 @@
 use crate::math::{max, min, Point3, Ray, Vec3};
 
-use super::{Intersection, Material, Texel};
+use super::Texel;
 
 /// struct to represent a triangle in 3D-Space
 #[derive(Debug, PartialEq)]
@@ -194,17 +194,15 @@ impl BoundingBox {
 #[derive(Debug)]
 pub(super) struct Mesh {
     triangles: Vec<Triangle>,
-    material: Material,
     bounding_box: BoundingBox,
 }
 
 impl Mesh {
     /// Create a new mesh
-    pub fn new(triangles: Vec<Triangle>, material: Material) -> Mesh {
+    pub fn new(triangles: Vec<Triangle>) -> Mesh {
         let bounding_box = BoundingBox::from(triangles.iter().flat_map(|tri| tri.points).collect());
         Mesh {
             triangles,
-            material,
             bounding_box,
         }
     }
@@ -220,7 +218,7 @@ impl Mesh {
 
     /// Calculates the intersection of the mesh and the `with` Ray if present
     /// Returns `None` if there is no intersection
-    pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
+    pub fn intersection(&self, with: &Ray) -> Option<(f32, Vec3, Texel)> {
         if !self.bounding_box.has_intersection(with) {
             return None;
         }
@@ -231,13 +229,7 @@ impl Mesh {
             .filter_map(|t| t.intersection(with))
             .min_by(|lhs, rhs| lhs.2.partial_cmp(&rhs.2).expect("t should not be NaN"))?;
 
-        Some(Intersection {
-            point: with.at(t)?,
-            t,
-            normal,
-            texel,
-            material: &self.material,
-        })
+        Some((t, normal, texel))
     }
 }
 

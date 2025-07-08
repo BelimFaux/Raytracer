@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf};
 
 use crate::{
     image::Image,
-    math::{to_radians, Color, Mat4, Vec3},
+    math::{to_radians, Color, Mat4, Point3, Quat, Vec3},
     objects::{Camera, Light, Material, Scene, ShadingModel, Surface, Texture},
 };
 use serde::Deserialize;
@@ -255,6 +255,28 @@ pub(super) enum SerialSurface {
         material_textured: Option<MaterialTextured>,
         transform: Option<TransformList>,
     },
+    JuliaSet {
+        #[serde(rename = "@max_iteration")]
+        max_iterations: u32,
+        #[serde(rename = "@epsilon")]
+        epsilon: f32,
+        position: Point3,
+        constant: SerialQuat,
+        material_solid: MaterialSolid,
+        transform: Option<TransformList>,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct SerialQuat {
+    #[serde(rename = "@x")]
+    x: f32,
+    #[serde(rename = "@y")]
+    y: f32,
+    #[serde(rename = "@z")]
+    z: f32,
+    #[serde(rename = "@w")]
+    w: f32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -342,6 +364,25 @@ impl SerialSurface {
                     surface.set_transform(inv_transform, normal_transform);
                 }
                 Ok(surface)
+            }
+            Self::JuliaSet {
+                position,
+                max_iterations,
+                epsilon,
+                constant,
+                material_solid,
+                transform,
+            } => {
+                let c = Quat::new(constant.x, constant.y, constant.z, constant.w);
+                let mut julia =
+                    Surface::julia_set(position, c, max_iterations, epsilon, material_solid.into());
+                if let Some(t) = transform {
+                    let inv_transform = t.into();
+                    // normal matrix is the inverse transpose
+                    let normal_transform = Mat4::transpose(&inv_transform);
+                    julia.set_transform(inv_transform, normal_transform);
+                }
+                Ok(julia)
             }
         }
     }

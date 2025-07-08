@@ -2,24 +2,19 @@ use std::f32::consts::PI;
 
 use crate::math::{Point3, Ray, Vec3};
 
-use super::{Intersection, Material, Texel};
+use super::Texel;
 
 /// struct to represent a Sphere in 3D-Space
 #[derive(Clone, Debug)]
 pub(super) struct Sphere {
     center: Point3,
     radius: f32,
-    material: Box<Material>, // box to keep the type small
 }
 
 impl Sphere {
     /// Create a new sphere
-    pub fn new(center: Point3, radius: f32, material: Material) -> Sphere {
-        Sphere {
-            center,
-            radius,
-            material: Box::new(material),
-        }
+    pub fn new(center: Point3, radius: f32) -> Sphere {
+        Sphere { center, radius }
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula
@@ -41,7 +36,7 @@ impl Sphere {
     /// Calculates the intersection of the sphere and the `with` Ray if present
     /// The normal in the intersection object will not necessarily be normalized
     /// Returns `None` if there is no intersection
-    pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
+    pub fn intersection(&self, with: &Ray) -> Option<(f32, Vec3, Texel)> {
         let (a, h, c) = self.intersection_coefficients(with);
         let discr = h * h - a * c;
         if discr < 0. {
@@ -57,13 +52,7 @@ impl Sphere {
         let p = with.at(t)?;
         let n = p - self.center;
 
-        Some(Intersection {
-            point: p,
-            t,
-            normal: n,
-            texel: self.get_texel_at(&p),
-            material: &self.material,
-        })
+        Some((t, n, self.get_texel_at(&p)))
     }
 
     /// Compute the texel on the given point on the spheres surface
@@ -79,31 +68,13 @@ impl Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        math::{Color, Vec3},
-        objects::{ShadingModel, Texture},
-    };
+    use crate::math::Vec3;
 
     use super::*;
 
     #[test]
     fn sphere_intersection_test() {
-        let sphere = Sphere::new(
-            Point3::new(0., 0., -1.),
-            0.5,
-            Material::new(
-                Texture::Color(Color::new(0., 0., 0.)),
-                0.,
-                0.,
-                0.,
-                ShadingModel::Phong {
-                    ka: 0.,
-                    kd: 0.,
-                    ks: 0.,
-                    exp: 1,
-                },
-            ),
-        );
+        let sphere = Sphere::new(Point3::new(0., 0., -1.), 0.5);
 
         let two_hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(sphere.intersection(&two_hit).is_some());
