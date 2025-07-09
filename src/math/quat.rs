@@ -38,7 +38,7 @@ impl Quat {
     }
 }
 
-impl ops::Add for &Quat {
+impl ops::Add for Quat {
     type Output = Quat;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -49,7 +49,7 @@ impl ops::Add for &Quat {
     }
 }
 
-impl ops::Sub for &Quat {
+impl ops::Sub for Quat {
     type Output = Quat;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -73,15 +73,15 @@ impl ops::Mul for &Quat {
     }
 }
 
-impl ops::Mul<Quat> for f32 {
+impl ops::Mul<f32> for Quat {
     type Output = Quat;
 
     /// Multiplication for quaternions
     /// generally not commutative
-    fn mul(self, rhs: Quat) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         Quat {
-            r: rhs.r * self,
-            v: rhs.v * self,
+            r: self.r * rhs,
+            v: self.v * rhs,
         }
     }
 }

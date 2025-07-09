@@ -5,6 +5,13 @@ use super::{
     Camera, Light,
 };
 
+#[derive(Debug)]
+struct Animated {
+    total_frames: usize,
+    curr_frame: usize,
+    fps: u16,
+}
+
 /// Struct to hold all data belonging to a single scene
 #[derive(Debug)]
 pub struct Scene {
@@ -14,8 +21,7 @@ pub struct Scene {
     camera: Camera,
     lights: Vec<Light>,
     surfaces: Vec<Surface>,
-    frames: usize,
-    curr_frame: usize,
+    animated: Animated,
 }
 
 impl Scene {
@@ -34,8 +40,11 @@ impl Scene {
             camera,
             lights,
             surfaces,
-            frames: 1,
-            curr_frame: 1,
+            animated: Animated {
+                total_frames: 1,
+                curr_frame: 1,
+                fps: 1,
+            },
         }
     }
 
@@ -45,22 +54,32 @@ impl Scene {
         self.samples = samples
     }
 
+    pub fn set_animation(&mut self, frames: usize, fps: u16) {
+        self.animated.total_frames = frames;
+        self.animated.fps = fps;
+    }
+
     /// Return a reference to the output file name
     pub fn get_output(&self) -> &str {
         &self.output
     }
 
     pub fn is_animated(&self) -> bool {
-        self.frames > 1
+        self.animated.total_frames > 1
     }
 
     pub fn get_frames(&self) -> usize {
-        self.frames
+        self.animated.total_frames
+    }
+
+    pub fn get_fps(&self) -> u16 {
+        self.animated.fps
     }
 
     pub fn next_frame(&mut self) {
-        self.curr_frame += 1;
-        self.surfaces.iter_mut().for_each(|s| s.next_frame());
+        self.animated.curr_frame += 1;
+        let w = self.animated.curr_frame as f32 / self.animated.total_frames as f32;
+        self.surfaces.iter_mut().for_each(|s| s.frame_perc(w));
     }
 
     /// Return the dimensions of the image

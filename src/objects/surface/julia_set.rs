@@ -1,7 +1,7 @@
 use core::f32;
 
 use crate::{
-    math::{min, Point3, Quat, Ray, Vec3},
+    math::{lerp, min, Point3, Quat, Ray, Vec3},
     objects::surface::Texel,
 };
 
@@ -10,6 +10,8 @@ use crate::{
 pub struct JuliaSet {
     pos: Point3,
     c: Quat,
+    startc: Quat,
+    endc: Option<Quat>,
     max_iterations: u32,
     epsilon: f32,
 }
@@ -24,8 +26,20 @@ impl JuliaSet {
         JuliaSet {
             pos,
             c,
+            startc: c,
+            endc: None,
             max_iterations,
             epsilon,
+        }
+    }
+
+    pub fn set_end(&mut self, ec: Quat) {
+        self.endc = Some(ec);
+    }
+
+    pub fn set_frame(&mut self, w: f32) {
+        if let Some(ec) = self.endc {
+            self.c = lerp(self.startc, ec, w);
         }
     }
 
@@ -34,8 +48,8 @@ impl JuliaSet {
     fn iterate_intersect(&self, q: &mut Quat) -> Quat {
         let mut qp = Quat::new(1., 0., 0., 0.);
         for _ in 0..self.max_iterations {
-            qp = 2. * (&*q * &qp);
-            *q = &q.square() + &self.c;
+            qp = (&*q * &qp) * 2.;
+            *q = q.square() + self.c;
 
             if q.length_squared() > Self::ESCAPE_THRESHOLD {
                 break;
@@ -88,20 +102,20 @@ impl JuliaSet {
     fn estimate_normal(&self, p: Point3) -> Vec3 {
         let qp = Quat::new(p[0], p[1], p[2], 0.);
 
-        let mut gx1 = &qp - &Quat::new(Self::DEL, 0., 0., 0.);
-        let mut gx2 = &qp + &Quat::new(Self::DEL, 0., 0., 0.);
-        let mut gy1 = &qp - &Quat::new(0., Self::DEL, 0., 0.);
-        let mut gy2 = &qp + &Quat::new(0., Self::DEL, 0., 0.);
-        let mut gz1 = &qp - &Quat::new(0., 0., Self::DEL, 0.);
-        let mut gz2 = &qp + &Quat::new(0., 0., Self::DEL, 0.);
+        let mut gx1 = qp - Quat::new(Self::DEL, 0., 0., 0.);
+        let mut gx2 = qp + Quat::new(Self::DEL, 0., 0., 0.);
+        let mut gy1 = qp - Quat::new(0., Self::DEL, 0., 0.);
+        let mut gy2 = qp + Quat::new(0., Self::DEL, 0., 0.);
+        let mut gz1 = qp - Quat::new(0., 0., Self::DEL, 0.);
+        let mut gz2 = qp + Quat::new(0., 0., Self::DEL, 0.);
 
         for _ in 0..self.max_iterations {
-            gx1 = &gx1.square() + &self.c;
-            gx2 = &gx2.square() + &self.c;
-            gy1 = &gy1.square() + &self.c;
-            gy2 = &gy2.square() + &self.c;
-            gz1 = &gz1.square() + &self.c;
-            gz2 = &gz2.square() + &self.c;
+            gx1 = gx1.square() + self.c;
+            gx2 = gx2.square() + self.c;
+            gy1 = gy1.square() + self.c;
+            gy2 = gy2.square() + self.c;
+            gz1 = gz1.square() + self.c;
+            gz2 = gz2.square() + self.c;
         }
 
         Vec3::normal(&Vec3::new(

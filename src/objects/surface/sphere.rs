@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::math::{Point3, Ray, Vec3};
+use crate::math::{lerp, Point3, Ray, Vec3};
 
 use super::Texel;
 
@@ -9,16 +9,30 @@ use super::Texel;
 pub(super) struct Sphere {
     center: Point3,
     radius: f32,
+    start: (Point3, f32),
+    end: Option<(Point3, f32)>,
 }
 
 impl Sphere {
     /// Create a new sphere
     pub fn new(center: Point3, radius: f32) -> Sphere {
-        Sphere { center, radius }
+        Sphere {
+            center,
+            radius,
+            start: (center, radius),
+            end: None,
+        }
     }
 
-    pub fn increase_radius(&mut self) {
-        self.radius += 0.01
+    pub fn set_frame(&mut self, w: f32) {
+        if let Some((ec, er)) = self.end {
+            self.center = lerp(self.start.0, ec, w);
+            self.radius = lerp(self.start.1, er, w);
+        }
+    }
+
+    pub fn set_end(&mut self, e: (Point3, f32)) {
+        self.end = Some(e)
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula

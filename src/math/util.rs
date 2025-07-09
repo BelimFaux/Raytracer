@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul};
+
 const PI: f32 = std::f32::consts::PI;
 
 /// bias to prevent surface and shadow acne
@@ -27,4 +29,11 @@ pub fn min(rhs: f32, lhs: f32) -> f32 {
     } else {
         lhs
     }
+}
+
+pub fn lerp<T>(a: T, b: T, w: f32) -> T
+where
+    T: Add<Output = T> + Mul<f32, Output = T>,
+{
+    a * (1. - w) + b * w
 }

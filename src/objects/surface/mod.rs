@@ -58,6 +58,18 @@ impl Surface {
         }
     }
 
+    pub fn set_sphere_end(&mut self, e: (Point3, f32)) {
+        if let Object::Sphere(s) = &mut self.obj {
+            s.set_end(e);
+        }
+    }
+
+    pub fn set_julia_end(&mut self, e: Quat) {
+        if let Object::JuliaSet(j) = &mut self.obj {
+            j.set_end(e);
+        }
+    }
+
     pub fn julia_set(
         pos: Point3,
         c: Quat,
@@ -72,9 +84,11 @@ impl Surface {
         }
     }
 
-    pub fn next_frame(&mut self) {
-        if let Object::Sphere(s) = &mut self.obj {
-            s.increase_radius();
+    pub fn frame_perc(&mut self, w: f32) {
+        match &mut self.obj {
+            Object::Sphere(s) => s.set_frame(w),
+            Object::JuliaSet(j) => j.set_frame(w),
+            _ => (),
         }
     }
 

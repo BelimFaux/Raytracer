@@ -243,7 +243,10 @@ pub(super) enum SerialSurface {
     Sphere {
         #[serde(rename = "@radius")]
         radius: f32,
+        #[serde(rename = "@endradius")]
+        endradius: Option<f32>,
         position: Vec3,
+        endposition: Option<Vec3>,
         material_solid: Option<MaterialSolid>,
         material_textured: Option<MaterialTextured>,
         transform: Option<TransformList>,
@@ -262,6 +265,7 @@ pub(super) enum SerialSurface {
         epsilon: f32,
         position: Point3,
         constant: SerialQuat,
+        endconstant: Option<SerialQuat>,
         material_solid: MaterialSolid,
         transform: Option<TransformList>,
     },
@@ -304,7 +308,9 @@ impl SerialSurface {
         match self {
             SerialSurface::Sphere {
                 radius,
+                endradius,
                 position,
+                endposition,
                 material_solid,
                 material_textured,
                 transform,
@@ -324,6 +330,11 @@ impl SerialSurface {
                     let inv_transform = t.into();
                     let normal_transform = Mat4::transpose(&inv_transform);
                     sphere.set_transform(inv_transform, normal_transform);
+                }
+                if endradius.is_some() || endposition.is_some() {
+                    let ec = endposition.unwrap_or(position);
+                    let er = endradius.unwrap_or(radius);
+                    sphere.set_sphere_end((ec, er));
                 }
                 Ok(sphere)
             }
@@ -370,6 +381,7 @@ impl SerialSurface {
                 max_iterations,
                 epsilon,
                 constant,
+                endconstant,
                 material_solid,
                 transform,
             } => {
@@ -381,6 +393,10 @@ impl SerialSurface {
                     // normal matrix is the inverse transpose
                     let normal_transform = Mat4::transpose(&inv_transform);
                     julia.set_transform(inv_transform, normal_transform);
+                }
+                if let Some(ec) = endconstant {
+                    let ec = Quat::new(ec.x, ec.y, ec.z, ec.w);
+                    julia.set_julia_end(ec);
                 }
                 Ok(julia)
             }
@@ -442,9 +458,18 @@ pub(super) struct SerialScene {
     output_file: String,
     background_color: Color,
     super_sampling: Option<SuperSampling>,
+    animated: Option<Animated>,
     camera: SerialCamera,
     lights: LightList,
     surfaces: SurfaceList,
+}
+
+#[derive(Debug, Deserialize)]
+pub(super) struct Animated {
+    #[serde(rename = "@frames")]
+    frames: usize,
+    #[serde(rename = "@fps")]
+    fps: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -489,6 +514,9 @@ impl SerialScene {
         );
         if let Some(ssaa) = self.super_sampling {
             s.add_samples(ssaa.samples);
+        }
+        if let Some(anim) = self.animated {
+            s.set_animation(anim.frames, anim.fps);
         }
 
         Ok(s)

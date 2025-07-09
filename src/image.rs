@@ -112,7 +112,7 @@ impl Image {
         ))
     }
 
-    pub fn save_apng(self, path: &mut PathBuf) -> Result<(), InputError> {
+    pub fn save_apng(self, path: &mut PathBuf, fps: u16) -> Result<(), InputError> {
         path.set_extension("png");
         let file = File::create(&path)
             .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
@@ -134,7 +134,7 @@ impl Image {
             .map_err(|err| {
                 Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
             })?;
-        encoder.set_frame_delay(1, 30).map_err(|err| {
+        encoder.set_frame_delay(1, fps).map_err(|err| {
             Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
         })?;
         let mut writer = encoder.write_header().map_err(|err| {

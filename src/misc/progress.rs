@@ -1,5 +1,8 @@
+use std::io::{stdout, Write};
+
 /// Manages a simple ProgressBar that prints to stdout
 pub struct ProgressBar {
+    buffer: String, // reuse buffer for formatting to avoid allocations
     curr: usize,
     max: usize,
     msg: String,
@@ -22,6 +25,7 @@ impl ProgressBar {
             max
         );
         ProgressBar {
+            buffer: String::with_capacity(80),
             curr: 0,
             max,
             msg,
@@ -32,6 +36,8 @@ impl ProgressBar {
     pub fn reset(&mut self, msg: String) {
         self.msg = msg;
         self.curr = 0;
+        self.last_percent = -1.;
+        self.next();
     }
 
     /// Advances the ProgressBar by 1
@@ -48,19 +54,27 @@ impl ProgressBar {
         let runner = if empty > 0 { Self::RUNNER } else { "" };
         let empty = if empty > 0 { empty - 1 } else { 0 };
 
-        print!(
-            "\r{} [{}{}{}] {:.2}% ({}/{})",
-            self.msg,
-            Self::FULL_CHAR.repeat(full),
-            runner,
-            Self::EMPTY_CHAR.repeat(empty),
-            percent * 100.,
-            self.curr,
-            self.max,
-        );
-        if self.curr == self.max {
-            println!();
+        self.buffer.clear();
+
+        {
+            use std::fmt::Write;
+            write!(
+                self.buffer,
+                "\r{} [{}{}{}] {:.2}% ({}/{}){}",
+                self.msg,
+                Self::FULL_CHAR.repeat(full),
+                runner,
+                Self::EMPTY_CHAR.repeat(empty),
+                percent * 100.,
+                self.curr,
+                self.max,
+                if self.curr == self.max { '\n' } else { ' ' }
+            )
+            .unwrap();
         }
+
+        print!("{}", self.buffer);
+        stdout().flush().unwrap();
         self.last_percent = percent;
     }
 }
