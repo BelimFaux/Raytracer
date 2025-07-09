@@ -29,8 +29,9 @@ fn run() -> Result<(), InputError> {
     let frames = scene.get_frames();
     let (width, height) = scene.get_dimensions();
     println!(
-        "Loaded file '{}'; Starting render with dimensions: {}x{}...",
+        "Loaded file '{}'; Starting render of {} frames with dimensions {}x{}...",
         config.get_input(),
+        frames,
         width,
         height
     );

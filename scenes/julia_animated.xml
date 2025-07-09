@@ -3,7 +3,7 @@
 
 <scene output_file="julia_animated.png">
     <background_color r="0.0" g="0.0" b="0.0"/>
-    <animated frames="30" fps="30"/>
+    <animated frames="60" fps="30"/>
     <camera>
         <position x="0.0" y="0.0" z="1.0"/>
         <lookat x="0.0" y="0.0" z="-2.5"/>
@@ -28,8 +28,8 @@
     <surfaces>
         <julia_set max_iteration="8" epsilon="0.006">
             <position x="0.0" y="0.0" z="-2.0"/>
-            <constant x="-0.7" y="-0.2" z="0.3" w="0.05"/>
-            <endconstant x="-0.3" y="-0.4" z="0.9" w="-0.05"/>
+            <constant x="-0.5" y="-0.2" z="0.3" w="0.05"/>
+            <endconstant x="0.5" y="-0.4" z="0.9" w="-0.05"/>
             <material_solid>
                 <color r="0.9" g="0.3" b="0.4"/>
                 <cook_torrance ka="0.2" ks="0.4" roughness="0.3"/>

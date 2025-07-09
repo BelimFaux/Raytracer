@@ -1,4 +1,4 @@
-use std::io::{stdout, Write};
+use std::fmt::Write;
 
 /// Manages a simple ProgressBar that prints to stdout
 pub struct ProgressBar {
@@ -56,25 +56,21 @@ impl ProgressBar {
 
         self.buffer.clear();
 
-        {
-            use std::fmt::Write;
-            write!(
-                self.buffer,
-                "\r{} [{}{}{}] {:.2}% ({}/{}){}",
-                self.msg,
-                Self::FULL_CHAR.repeat(full),
-                runner,
-                Self::EMPTY_CHAR.repeat(empty),
-                percent * 100.,
-                self.curr,
-                self.max,
-                if self.curr == self.max { '\n' } else { ' ' }
-            )
-            .unwrap();
-        }
+        write!(
+            self.buffer,
+            "\r{} [{}{}{}] {:.2}% ({}/{}){}",
+            self.msg,
+            Self::FULL_CHAR.repeat(full),
+            runner,
+            Self::EMPTY_CHAR.repeat(empty),
+            percent * 100.,
+            self.curr,
+            self.max,
+            if self.curr == self.max { '\n' } else { ' ' }
+        )
+        .unwrap();
 
         print!("{}", self.buffer);
-        stdout().flush().unwrap();
         self.last_percent = percent;
     }
 }

@@ -18,9 +18,9 @@ type Texel = (f32, f32);
 /// either a sphere or a mesh
 #[derive(Debug)]
 enum Object {
-    Sphere(Sphere),
+    Sphere(Box<Sphere>),
     Mesh(Box<Mesh>), // Box to keep the enum small
-    JuliaSet(JuliaSet),
+    JuliaSet(Box<JuliaSet>),
 }
 
 /// struct that bundles the (inverse) transformation
@@ -43,7 +43,7 @@ impl Surface {
     /// Create a new sphere object from a radius and center
     pub fn sphere(center: Point3, radius: f32, material: Material) -> Surface {
         Surface {
-            obj: Object::Sphere(Sphere::new(center, radius)),
+            obj: Object::Sphere(Box::new(Sphere::new(center, radius))),
             transform: None,
             material: Box::new(material),
         }
@@ -58,6 +58,20 @@ impl Surface {
         }
     }
 
+    pub fn julia_set(
+        pos: Point3,
+        c: Quat,
+        max_iterations: u32,
+        epsilon: f32,
+        material: Material,
+    ) -> Surface {
+        Surface {
+            obj: Object::JuliaSet(Box::new(JuliaSet::new(pos, c, max_iterations, epsilon))),
+            transform: None,
+            material: Box::new(material),
+        }
+    }
+
     pub fn set_sphere_end(&mut self, e: (Point3, f32)) {
         if let Object::Sphere(s) = &mut self.obj {
             s.set_end(e);
@@ -67,20 +81,6 @@ impl Surface {
     pub fn set_julia_end(&mut self, e: Quat) {
         if let Object::JuliaSet(j) = &mut self.obj {
             j.set_end(e);
-        }
-    }
-
-    pub fn julia_set(
-        pos: Point3,
-        c: Quat,
-        max_iterations: u32,
-        epsilon: f32,
-        material: Material,
-    ) -> Surface {
-        Surface {
-            obj: Object::JuliaSet(JuliaSet::new(pos, c, max_iterations, epsilon)),
-            transform: None,
-            material: Box::new(material),
         }
     }
 
