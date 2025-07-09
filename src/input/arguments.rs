@@ -142,7 +142,7 @@ impl Config {
 
     /// Convert a message to a argument specific InputError
     fn parse_err(msg: &str) -> InputError {
-        InputError::new(format!("Error while parsing Arguments:\n    {msg}"))
+        InputError::new("Error while parsing Arguments".to_string(), msg.to_string())
     }
 
     fn insert_options<'a, I>(&mut self, opt: &CliOption, iter: &mut I) -> Result<(), InputError>

@@ -136,7 +136,10 @@ fn parse_texel(line: Vec<&str>) -> Result<(f32, f32), String> {
 
 /// construct an appropriate error message
 fn err(current_line: usize, msg: &str) -> InputError {
-    InputError(format!("Error on line {}: {msg}", current_line + 1))
+    InputError::new(
+        String::new(),
+        format!("Error on line {}: {msg}", current_line + 1),
+    )
 }
 
 #[cfg(test)]

@@ -320,10 +320,13 @@ impl SerialSurface {
                 } else {
                     material_textured
                         .map(|m| m.convert_to_material(path))
-                        .ok_or(InputError::new(format!(
-                            "Error while reading file '{}':\n    No material was given.",
-                            path.to_str().unwrap_or("<INVALID PATH>")
-                        )))??
+                        .ok_or(InputError::new(
+                            format!(
+                                "Error while reading file '{}':",
+                                path.to_str().unwrap_or("<INVALID PATH>")
+                            ),
+                            "No material was given.".to_string(),
+                        ))??
                 };
                 let mut sphere = Surface::sphere(position, radius, material);
                 if let Some(t) = transform {
@@ -346,26 +349,26 @@ impl SerialSurface {
             } => {
                 path.set_file_name(&name);
                 let file = fs::read_to_string(&mut *path).map_err(|err| {
-                    InputError::new(format!(
-                        "Error while reading file '{}':\n    {}",
-                        &name, err
-                    ))
+                    InputError::new(
+                        format!("Error while reading file '{}'", &name),
+                        err.to_string(),
+                    )
                 })?;
                 let material = if let Some(m) = material_solid {
                     m.into()
                 } else {
                     material_textured
                         .map(|m| m.convert_to_material(path))
-                        .ok_or(InputError::new(format!(
-                            "Error while reading file '{}':\n    No material was given.",
-                            path.to_str().unwrap_or("<INVALID PATH>")
-                        )))??
+                        .ok_or(InputError::new(
+                            format!(
+                                "Error while reading file '{}':",
+                                path.to_str().unwrap_or("<INVALID PATH>")
+                            ),
+                            "No material was given.".to_string(),
+                        ))??
                 };
                 let triangles = parse(file).map_err(|err| {
-                    InputError::new(format!(
-                        "Error while parsing file '{}':\n    {}",
-                        &name, err
-                    ))
+                    InputError::new(format!("Error while parsing file '{}'", &name), err.msg)
                 })?;
                 let mut surface = Surface::mesh(triangles, material);
                 if let Some(t) = transform {

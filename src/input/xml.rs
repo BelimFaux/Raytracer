@@ -13,10 +13,13 @@ fn err_to_input_err<E>(err: E, path: &Path) -> InputError
 where
     E: Error,
 {
-    InputError::new(format!(
-        "Error while parsing xml file {}:\n    {err}",
-        path.to_str().unwrap_or("<INVALID PATH>")
-    ))
+    InputError::new(
+        format!(
+            "Error while parsing xml file {}",
+            path.to_str().unwrap_or("<INVALID PATH>")
+        ),
+        err.to_string(),
+    )
 }
 
 /// Read in an xml fie from the specified path and parse to a scene object

@@ -105,11 +105,10 @@ impl Image {
 
     /// format io error to input error
     fn io_err_to_input_err(err: io::Error, path: &Path, msg: &str) -> InputError {
-        InputError::new(format!(
-            "{} {}:\n    {err}",
-            msg,
-            path.to_str().unwrap_or("<INVALID_PATH>")
-        ))
+        InputError::new(
+            format!("{} {}", msg, path.to_str().unwrap_or("<INVALID_PATH>")),
+            err.to_string(),
+        )
     }
 
     pub fn save_apng(self, path: &mut PathBuf, fps: u16) -> Result<(), InputError> {
