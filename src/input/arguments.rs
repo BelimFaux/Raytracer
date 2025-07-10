@@ -28,15 +28,15 @@ const OPTIONS: [CliOption; 6] = [
         action: OptAction::Toggle,
     },
     CliOption {
-        long: "progress-bar",
-        description: "Display a progress bar while rendering",
-        short: Some('p'),
-        action: OptAction::Toggle,
-    },
-    CliOption {
         long: "blur",
         description: "Instead of an animation, render movement as blur",
         short: None,
+        action: OptAction::Toggle,
+    },
+    CliOption {
+        long: "progress-bar",
+        description: "Display a progress bar while rendering",
+        short: Some('p'),
         action: OptAction::Toggle,
     },
     CliOption {
