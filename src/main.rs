@@ -54,10 +54,10 @@ fn run() -> Result<(), InputError> {
                 if pixels_processed >= (width * height) {
                     pixels_processed = 0;
                     frame += 1;
-                    if frame >= frames {
+                    if frame > frames {
                         break;
                     }
-                    progress.reset(format!("Frame {}:", frame));
+                    progress.reset(format!("Frame {frame}:"));
                 }
             }
         });
