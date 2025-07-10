@@ -409,7 +409,6 @@ impl SerialSurface {
 
 // --- Light serial types ---
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub(super) struct Falloff {
     #[serde(rename = "@alpha1")]
@@ -433,7 +432,6 @@ pub(super) enum SerialLight {
         color: Color,
         position: Vec3,
     },
-    #[allow(unused)]
     SpotLight {
         color: Color,
         position: Vec3,
@@ -448,7 +446,20 @@ impl From<SerialLight> for Light {
             SerialLight::AmbientLight { color } => Light::Ambient { color },
             SerialLight::ParallelLight { color, direction } => Light::Parallel { color, direction },
             SerialLight::PointLight { color, position } => Light::Point { color, position },
-            SerialLight::SpotLight { .. } => unimplemented!("Spotlights are not supported"),
+            SerialLight::SpotLight {
+                color,
+                position,
+                direction,
+                falloff,
+            } => Light::Spot {
+                color,
+                position,
+                direction,
+                falloff: (
+                    to_radians(falloff.alpha1 as f32).cos(),
+                    to_radians(falloff.alpha2 as f32).cos(),
+                ),
+            },
         }
     }
 }

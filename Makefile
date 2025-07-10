@@ -5,7 +5,7 @@ DBGTARGET = $(ROOT_DIR)/target/debug/ray-tracer
 
 INPDIR = ./scenes
 BASE_EXAMPLES = $(wildcard $(INPDIR)/example*.xml)
-CUSTOM_EXAMPLES = $(INPDIR)/animation.xml $(INPDIR)/cook-torrance.xml $(INPDIR)/depth_of_field.xml $(INPDIR)/julia_animated.xml $(INPDIR)/julia_set.xml
+CUSTOM_EXAMPLES = $(INPDIR)/animation.xml $(INPDIR)/spotlight.xml $(INPDIR)/cook-torrance.xml $(INPDIR)/depth_of_field.xml $(INPDIR)/julia_animated.xml $(INPDIR)/julia_set.xml
 
 .PHONY: release debug-target all debug chess
 

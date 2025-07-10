@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use crate::{
     image::Image,
-    math::{max, Color, Point3, Ray, Vec3},
+    math::{max, smoothstep, Color, Point3, Ray, Vec3},
     objects::Light,
 };
 
@@ -225,6 +225,28 @@ impl Material {
                     ray.dir(),
                     self.texture.get_color(texel),
                 )
+            }
+            Light::Spot {
+                color,
+                position,
+                direction,
+                falloff,
+            } => {
+                let dir = Vec3::normal(&(*point - *position));
+                let dot_from_dir = dir.dot(&Vec3::normal(direction));
+                let in_light = smoothstep(falloff.1, falloff.0, dot_from_dir);
+                if in_light == 0. {
+                    Color::zero()
+                } else {
+                    in_light
+                        * self.shading.shading_color(
+                            color,
+                            &dir,
+                            normal,
+                            ray.dir(),
+                            self.texture.get_color(texel),
+                        )
+                }
             }
         }
     }

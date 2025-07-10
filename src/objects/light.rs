@@ -3,9 +3,23 @@ use crate::math::{Color, Point3, Ray, Vec3, BIAS};
 /// Enum to represent different types of light
 #[derive(Clone, Debug)]
 pub enum Light {
-    Ambient { color: Color },
-    Parallel { color: Color, direction: Vec3 },
-    Point { color: Color, position: Point3 },
+    Ambient {
+        color: Color,
+    },
+    Parallel {
+        color: Color,
+        direction: Vec3,
+    },
+    Point {
+        color: Color,
+        position: Point3,
+    },
+    Spot {
+        color: Color,
+        position: Point3,
+        direction: Vec3,
+        falloff: (f32, f32),
+    },
 }
 
 impl Light {
@@ -28,6 +42,26 @@ impl Light {
                 let pos = *from + BIAS * direction;
                 Some(Ray::new(pos, direction).set_bounds(length)) // bounds should be the initial
                                                                   // length
+            }
+            Self::Spot {
+                color: _,
+                position,
+                direction,
+                falloff,
+            } => {
+                let mut shadow_direction = *position - *from;
+                let length = shadow_direction.length();
+                shadow_direction /= length;
+
+                // if the point is completely outside the cone, we dont have to send a shadow ray
+                let light_dir = -Vec3::normal(direction);
+                let limit = falloff.1;
+                if light_dir.dot(&shadow_direction) < limit {
+                    None
+                } else {
+                    let pos = *from + BIAS * shadow_direction;
+                    Some(Ray::new(pos, shadow_direction).set_bounds(length))
+                }
             }
         }
     }

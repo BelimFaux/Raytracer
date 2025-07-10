@@ -31,9 +31,19 @@ pub fn min(rhs: f32, lhs: f32) -> f32 {
     }
 }
 
+/// Linearly interpolates between two values with percentage `w`
+#[inline(always)]
 pub fn lerp<T>(a: T, b: T, w: f32) -> T
 where
     T: Add<Output = T> + Mul<f32, Output = T>,
 {
     a * (1. - w) + b * w
+}
+
+/// clamp a value between two edges smoothly by using hermite interpolation
+/// See [https://en.wikipedia.org/wiki/Smoothstep](https://en.wikipedia.org/wiki/Smoothstep)
+#[inline(always)]
+pub fn smoothstep(edge0: f32, edge1: f32, t: f32) -> f32 {
+    let x = ((t - edge0) / (edge1 - edge0)).clamp(0., 1.);
+    x * x * (3. - 2. * x)
 }
