@@ -87,7 +87,10 @@ fn run() -> Result<(), InputError> {
     }
     println!("Finished rendering, saving image...");
 
-    if scene.is_animated() {
+    if config.blur() {
+        img.average_frames();
+    }
+    if !config.blur() && scene.is_animated() {
         img.save_apng(&mut outpath, scene.get_fps())?;
     } else if config.ppm() {
         img.save_ppm(&mut outpath)?

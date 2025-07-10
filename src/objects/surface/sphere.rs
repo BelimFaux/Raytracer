@@ -4,13 +4,18 @@ use crate::math::{lerp, Point3, Ray, Vec3};
 
 use super::Texel;
 
+#[derive(Clone, Debug)]
+struct Animation {
+    start: (Point3, f32),
+    end: Option<(Point3, f32)>,
+}
+
 /// struct to represent a Sphere in 3D-Space
 #[derive(Clone, Debug)]
 pub(super) struct Sphere {
     center: Point3,
     radius: f32,
-    start: (Point3, f32),
-    end: Option<(Point3, f32)>,
+    animation: Box<Animation>,
 }
 
 impl Sphere {
@@ -19,20 +24,24 @@ impl Sphere {
         Sphere {
             center,
             radius,
-            start: (center, radius),
-            end: None,
+            animation: Box::new(Animation {
+                start: (center, radius),
+                end: None,
+            }),
         }
     }
 
+    /// Set the frame percentage to lerp between starting and end parameters
     pub fn set_frame(&mut self, w: f32) {
-        if let Some((ec, er)) = self.end {
-            self.center = lerp(self.start.0, ec, w);
-            self.radius = lerp(self.start.1, er, w);
+        if let Some((ec, er)) = self.animation.end {
+            self.center = lerp(self.animation.start.0, ec, w);
+            self.radius = lerp(self.animation.start.1, er, w);
         }
     }
 
+    /// Set the end parameters (endposition, endradius)
     pub fn set_end(&mut self, e: (Point3, f32)) {
-        self.end = Some(e)
+        self.animation.end = Some(e)
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula

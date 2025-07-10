@@ -20,7 +20,7 @@ struct CliOption {
 }
 
 /// All cli options that should be parsed
-const OPTIONS: [CliOption; 5] = [
+const OPTIONS: [CliOption; 6] = [
     CliOption {
         long: "ppm",
         description: "Export the image as a ppm",
@@ -31,6 +31,12 @@ const OPTIONS: [CliOption; 5] = [
         long: "progress-bar",
         description: "Display a progress bar while rendering",
         short: Some('p'),
+        action: OptAction::Toggle,
+    },
+    CliOption {
+        long: "blur",
+        description: "Instead of an animation, render movement as blur",
+        short: None,
         action: OptAction::Toggle,
     },
     CliOption {
@@ -236,6 +242,10 @@ impl Config {
 
     pub fn ppm(&self) -> bool {
         self.options.contains_key("ppm")
+    }
+
+    pub fn blur(&self) -> bool {
+        self.options.contains_key("blur")
     }
 
     pub fn outdir(&self) -> &str {

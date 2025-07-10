@@ -54,6 +54,7 @@ impl Scene {
         self.samples = samples
     }
 
+    /// Set the scene to have an animation with the specified number of frames and fps
     pub fn set_animation(&mut self, frames: usize, fps: u16) {
         self.animated.total_frames = frames;
         self.animated.fps = fps;
@@ -76,6 +77,8 @@ impl Scene {
         self.animated.fps
     }
 
+    /// change the scene to the next frame
+    /// might change the properties of some objects
     pub fn next_frame(&mut self) {
         self.animated.curr_frame += 1;
         let w = self.animated.curr_frame as f32 / self.animated.total_frames as f32;

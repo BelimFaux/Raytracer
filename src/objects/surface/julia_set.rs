@@ -5,15 +5,20 @@ use crate::{
     objects::surface::Texel,
 };
 
+#[derive(Debug)]
+struct Animation {
+    startc: Quat,
+    endc: Option<Quat>,
+}
+
 /// Struct to represent a ray-tracable 4d julia set
 #[derive(Debug)]
 pub struct JuliaSet {
     pos: Point3,
     c: Quat,
-    startc: Quat,
-    endc: Option<Quat>,
     max_iterations: u32,
     epsilon: f32,
+    animation: Box<Animation>,
 }
 
 impl JuliaSet {
@@ -22,24 +27,29 @@ impl JuliaSet {
     const ESCAPE_THRESHOLD: f32 = 1e1;
     const DEL: f32 = 1e-4;
 
+    /// Create a new julia set
     pub fn new(pos: Point3, c: Quat, max_iterations: u32, epsilon: f32) -> JuliaSet {
         JuliaSet {
             pos,
             c,
-            startc: c,
-            endc: None,
             max_iterations,
             epsilon,
+            animation: Box::new(Animation {
+                startc: c,
+                endc: None,
+            }),
         }
     }
 
+    /// Set the endconstant
     pub fn set_end(&mut self, ec: Quat) {
-        self.endc = Some(ec);
+        self.animation.endc = Some(ec);
     }
 
+    /// set the frame percentage the lerp between starting and ending constant
     pub fn set_frame(&mut self, w: f32) {
-        if let Some(ec) = self.endc {
-            self.c = lerp(self.startc, ec, w);
+        if let Some(ec) = self.animation.endc {
+            self.c = lerp(self.animation.startc, ec, w);
         }
     }
 

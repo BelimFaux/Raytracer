@@ -18,7 +18,7 @@ type Texel = (f32, f32);
 /// either a sphere or a mesh
 #[derive(Debug)]
 enum Object {
-    Sphere(Box<Sphere>),
+    Sphere(Sphere),
     Mesh(Box<Mesh>), // Box to keep the enum small
     JuliaSet(Box<JuliaSet>),
 }
@@ -43,7 +43,7 @@ impl Surface {
     /// Create a new sphere object from a radius and center
     pub fn sphere(center: Point3, radius: f32, material: Material) -> Surface {
         Surface {
-            obj: Object::Sphere(Box::new(Sphere::new(center, radius))),
+            obj: Object::Sphere(Sphere::new(center, radius)),
             transform: None,
             material: Box::new(material),
         }
@@ -58,6 +58,8 @@ impl Surface {
         }
     }
 
+    /// Create a new julia set object with a position, a constant and the given maximum iterations
+    /// and epsilon
     pub fn julia_set(
         pos: Point3,
         c: Quat,
@@ -72,18 +74,24 @@ impl Surface {
         }
     }
 
+    /// Set end parameters for a sphere
+    /// does not have any effect if object is not a sphere
     pub fn set_sphere_end(&mut self, e: (Point3, f32)) {
         if let Object::Sphere(s) = &mut self.obj {
             s.set_end(e);
         }
     }
 
+    /// Set end parameters for a julia set
+    /// does not have any effect if object is not a julia set
     pub fn set_julia_end(&mut self, e: Quat) {
         if let Object::JuliaSet(j) = &mut self.obj {
             j.set_end(e);
         }
     }
 
+    /// Set the frame percentage
+    /// w is the percentage that the animation is finished
     pub fn frame_perc(&mut self, w: f32) {
         match &mut self.obj {
             Object::Sphere(s) => s.set_frame(w),

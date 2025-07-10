@@ -2,6 +2,7 @@
 //! responsible for interacting with images, such as manipulating, saving and loading
 
 use std::io::{self, Write};
+use std::iter::zip;
 use std::path::Path;
 use std::{fs::File, io::BufWriter, path::PathBuf};
 
@@ -111,6 +112,38 @@ impl Image {
         )
     }
 
+    /// average all frames in the image and place the result in the first frame
+    /// for single frame images this shouldn't change anything. For images with multiple frames
+    /// (animations) this will 'blur' any movement between the images
+    pub fn average_frames(&mut self) {
+        let mut t = self
+            .buf
+            .iter_mut()
+            // convert to a data type that can hold higher numbers, so no overflow happens when
+            // adding (u64::max() / u8::max() ~= 7.2e16; should be enough frames)
+            .map(|frame| {
+                frame
+                    .iter()
+                    .map(|px| [px[0] as u64, px[1] as u64, px[2] as u64])
+                    .collect()
+            })
+            .reduce(|acc: Vec<[u64; 3]>, frame| {
+                zip(acc, frame)
+                    .map(|z| [z.0[0] + z.1[0], z.0[1] + z.1[1], z.0[2] + z.1[2]])
+                    .collect()
+            })
+            .expect("Image should contain atleast one frame");
+        let frames = self.buf.len() as u64;
+        let t: Vec<_> = t
+            .iter_mut()
+            .map(|px| [px[0] / frames, px[1] / frames, px[2] / frames])
+            .map(|px| [px[0] as u8, px[1] as u8, px[2] as u8])
+            .collect();
+        self.buf[0] = t;
+    }
+
+    /// Save the image as an animated png with the specified framerate
+    /// for this to have any effect, the buffer should contain multiple frames
     pub fn save_apng(self, path: &mut PathBuf, fps: u16) -> Result<(), InputError> {
         path.set_extension("png");
         let file = File::create(&path)
@@ -148,7 +181,9 @@ impl Image {
                 })?;
         }
 
-        Ok(())
+        writer.finish().map_err(|err| {
+            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+        })
     }
 
     /// Saves the image as a png image to the specified path
@@ -185,7 +220,9 @@ impl Image {
                 Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
             })?;
 
-        Ok(())
+        writer.finish().map_err(|err| {
+            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+        })
     }
 
     /// Saves the image as a ppm image to the specified path
