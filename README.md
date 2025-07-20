@@ -1,6 +1,6 @@
 # Raytracer
 
-A (whitted) Raytracer written in Rust. It can read in scenes from xml files and produce images or small animations as output.
+A (whitted) Raytracer written in Rust. It can read in scenes from xml files and produce images or small animations as output (see [Examples](#examples)).
 This was originally written for the [GFX 25S course of University of Vienna](https://ufind.univie.ac.at/en/course.html?lv=052200&semester=2025S).
 To use the Raytracer, clone the repo, create a scene in the [specified xml-schema](#xml-schema) (or use one of the example files in the `scenes` directory) and [run](#running-the-raytracer) the program using cargo.
 
