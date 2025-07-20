@@ -1,51 +1,55 @@
-<?xml version="1.0" standalone="no" ?>
+<?xml version="1.0" standalone="no"?>
 <!DOCTYPE scene SYSTEM "scene.dtd">
 
 <scene output_file="chess.png">
-    <background_color r="0.0" g="0.0" b="0.0"/>
-    <super_sampling samples="4"/>
-    <camera>
-        <position x="0.0" y="0.0" z="1.0"/>
-        <lookat x="0.0" y="0.0" z="-2.5"/>
-        <up x="0.0" y="1.0" z="0.0"/>
-        <horizontal_fov angle="45"/>
-        <depth_of_field focal_length="5.5" aperture="0.1"/>
-        <resolution horizontal="1024" vertical="1024"/>
-        <max_bounces n="4"/>
-    </camera>
-    <lights>
-        <ambient_light>
-            <color r="1.0" g="1.0" b="1.0"/>
-        </ambient_light>
-        <point_light>
-            <color r="0.7" g="0.7" b="0.7"/>
-            <position x="1.5" y="3.0" z="-2.5"/>
-        </point_light>
-    </lights>
-    <surfaces>
-        <mesh name="queen.obj">
-            <material_solid>
-                <color r="1.0" g="1.0" b="1.0"/>
-                <cook_torrance ka="0.3" ks="0.4" roughness="0.25"/>
-                <reflectance r="0.2"/>
-                <transmittance t="0.0"/>
-                <refraction iof="2.0"/>
-            </material_solid>
-            <transform>
-                <translate x="1.0" y="-2.15" z="-4"/>
-            </transform>
-        </mesh>
-        <mesh name="base.obj">
-            <material_textured>
-                <texture name="mramor6x6.png"/>
-                <phong ka="0.3" kd="0.9" ks="0.0" exponent="20"/>
-                <reflectance r="0.4"/>
-                <transmittance t="0.0"/>
-                <refraction iof="0.0"/>
-            </material_textured>
-            <transform>
-                <translate x="0.0" y="-2.5" z="-5"/>
-            </transform>
-        </mesh>
-    </surfaces>
+  <background_color r="0.0" g="0.0" b="0.0" />
+  <super_sampling samples="4" />
+
+  <camera>
+    <position x="0.0" y="0.0" z="1.0" />
+    <lookat x="0.0" y="0.0" z="-2.5" />
+    <up x="0.0" y="1.0" z="0.0" />
+    <horizontal_fov angle="45" />
+    <depth_of_field focal_length="5.5" aperture="0.1" />
+    <resolution horizontal="1024" vertical="1024" />
+    <max_bounces n="4" />
+  </camera>
+
+  <lights>
+    <ambient_light>
+      <color r="1.0" g="1.0" b="1.0" />
+    </ambient_light>
+    <point_light>
+      <color r="0.7" g="0.7" b="0.7" />
+      <position x="1.5" y="3.0" z="-2.5" />
+    </point_light>
+  </lights>
+
+  <surfaces>
+    <mesh name="queen.obj">
+      <material_solid>
+        <color r="1.0" g="1.0" b="1.0" />
+        <cook_torrance ka="0.3" ks="0.4" roughness="0.25" />
+        <reflectance r="0.2" />
+        <transmittance t="0.0" />
+        <refraction iof="2.0" />
+      </material_solid>
+      <transform>
+        <translate x="1.0" y="-2.15" z="-4" />
+      </transform>
+    </mesh>
+
+    <mesh name="base.obj">
+      <material_textured>
+        <texture name="mramor6x6.png" />
+        <phong ka="0.3" kd="0.9" ks="0.0" exponent="20" />
+        <reflectance r="0.4" />
+        <transmittance t="0.0" />
+        <refraction iof="0.0" />
+      </material_textured>
+      <transform>
+        <translate x="0.0" y="-2.5" z="-5" />
+      </transform>
+    </mesh>
+  </surfaces>
 </scene>

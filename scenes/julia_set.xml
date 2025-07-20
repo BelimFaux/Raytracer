@@ -1,54 +1,58 @@
-<?xml version="1.0" standalone="no" ?>
+<?xml version="1.0" standalone="no"?>
 <!DOCTYPE scene SYSTEM "scene.dtd">
 
 <scene output_file="julia_set.png">
-    <background_color r="0.0" g="0.0" b="0.0"/>
-    <super_sampling samples="16"/>
-    <camera>
-        <position x="0.0" y="0.0" z="1.0"/>
-        <lookat x="0.0" y="0.0" z="-2.5"/>
-        <up x="0.0" y="1.0" z="0.0"/>
-        <horizontal_fov angle="45"/>
-        <depth_of_field focal_length="3.7" aperture="0.05"/>
-        <resolution horizontal="1024" vertical="1024"/>
-        <max_bounces n="8"/>
-    </camera>
-    <lights>
-        <ambient_light>
-            <color r="1.0" g="1.0" b="1.0"/>
-        </ambient_light>
-        <point_light>
-            <color r="0.7" g="0.7" b="0.7"/>
-            <position x="1.5" y="3.0" z="-2.5"/>
-        </point_light>
-        <point_light>
-            <color r="0.7" g="0.7" b="0.7"/>
-            <position x="-1.5" y="3.0" z="-2.5"/>
-        </point_light>
-    </lights>
-    <surfaces>
-        <julia_set max_iteration="8" epsilon="0.006">
-            <position x="0.0" y="0.0" z="-2.0"/>
-            <constant x="-0.5" y="-0.3" z="0.6" w="0.0"/>
-            <material_solid>
-                <color r="0.9" g="0.3" b="0.4"/>
-                <cook_torrance ka="0.2" ks="0.4" roughness="0.3"/>
-                <reflectance r="0.5"/>
-                <transmittance t="0.0"/>
-                <refraction iof="2.0"/>
-            </material_solid>
-            <transform>
-                <scale x="1.5" y="1.5" z="1.5"/>
-            </transform>
-        </julia_set>
-        <mesh name="open_room.obj">
-            <material_textured>
-                <texture name="rainbow.png"/>
-                <phong ka="0.3" kd="0.9" ks="1.0" exponent="20"/>
-                <reflectance r="0.0"/>
-                <transmittance t="0.0"/>
-                <refraction iof="0.0"/>
-            </material_textured>
-        </mesh>
-    </surfaces>
+  <background_color r="0.0" g="0.0" b="0.0" />
+  <super_sampling samples="16" />
+
+  <camera>
+    <position x="0.0" y="0.0" z="1.0" />
+    <lookat x="0.0" y="0.0" z="-2.5" />
+    <up x="0.0" y="1.0" z="0.0" />
+    <horizontal_fov angle="45" />
+    <depth_of_field focal_length="3.7" aperture="0.05" />
+    <resolution horizontal="1024" vertical="1024" />
+    <max_bounces n="8" />
+  </camera>
+
+  <lights>
+    <ambient_light>
+      <color r="1.0" g="1.0" b="1.0" />
+    </ambient_light>
+    <point_light>
+      <color r="0.7" g="0.7" b="0.7" />
+      <position x="1.5" y="3.0" z="-2.5" />
+    </point_light>
+    <point_light>
+      <color r="0.7" g="0.7" b="0.7" />
+      <position x="-1.5" y="3.0" z="-2.5" />
+    </point_light>
+  </lights>
+
+  <surfaces>
+    <julia_set max_iteration="8" epsilon="0.006">
+      <position x="0.0" y="0.0" z="-2.0" />
+      <constant x="-0.5" y="-0.3" z="0.6" w="0.0" />
+      <material_solid>
+        <color r="0.9" g="0.3" b="0.4" />
+        <cook_torrance ka="0.2" ks="0.4" roughness="0.3" />
+        <reflectance r="0.5" />
+        <transmittance t="0.0" />
+        <refraction iof="2.0" />
+      </material_solid>
+      <transform>
+        <scale x="1.5" y="1.5" z="1.5" />
+      </transform>
+    </julia_set>
+
+    <mesh name="open_room.obj">
+      <material_textured>
+        <texture name="rainbow.png" />
+        <phong ka="0.3" kd="0.9" ks="1.0" exponent="20" />
+        <reflectance r="0.0" />
+        <transmittance t="0.0" />
+        <refraction iof="0.0" />
+      </material_textured>
+    </mesh>
+  </surfaces>
 </scene>
