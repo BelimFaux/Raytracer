@@ -26,6 +26,7 @@ pub struct Scene {
 
 impl Scene {
     /// Create a new scene
+    #[must_use]
     pub fn new(
         output: String,
         background_color: Color,
@@ -51,7 +52,7 @@ impl Scene {
     /// Add the number of samples for the scene
     /// Setting this to any number other than 0 will enable super-sampling
     pub fn add_samples(&mut self, samples: u32) {
-        self.samples = samples
+        self.samples = samples;
     }
 
     /// Set the scene to have an animation with the specified number of frames and fps
@@ -61,18 +62,22 @@ impl Scene {
     }
 
     /// Return a reference to the output file name
+    #[must_use]
     pub fn get_output(&self) -> &str {
         &self.output
     }
 
+    #[must_use]
     pub fn is_animated(&self) -> bool {
         self.animated.total_frames > 1
     }
 
+    #[must_use]
     pub fn get_frames(&self) -> usize {
         self.animated.total_frames
     }
 
+    #[must_use]
     pub fn get_fps(&self) -> u16 {
         self.animated.fps
     }
@@ -81,11 +86,13 @@ impl Scene {
     /// might change the properties of some objects
     pub fn next_frame(&mut self) {
         self.animated.curr_frame += 1;
+        #[allow(clippy::cast_precision_loss)]
         let w = self.animated.curr_frame as f32 / self.animated.total_frames as f32;
         self.surfaces.iter_mut().for_each(|s| s.frame_perc(w));
     }
 
     /// Return the dimensions of the image
+    #[must_use]
     pub fn get_dimensions(&self) -> (u32, u32) {
         self.camera.get_dimensions()
     }
@@ -161,6 +168,7 @@ impl Scene {
 
     /// trace the pixel with super-sampling
     /// will panic if `samples` is 0 (0 samples doesn't really make sense, does it?)
+    #[allow(clippy::cast_precision_loss)]
     fn ssaa_trace_pixel(&self, u: u32, v: u32) -> Color {
         let mut final_color = Color::zero();
         for _ in 0..self.samples {
@@ -174,6 +182,7 @@ impl Scene {
     /// ray trace a pixel
     /// get the camera ray and test the closest intersection with any object
     /// then perform lighting calculations at the closest intersection
+    #[must_use]
     pub fn trace_pixel(&self, u: u32, v: u32) -> Color {
         if self.samples != 0 {
             return self.ssaa_trace_pixel(u, v);

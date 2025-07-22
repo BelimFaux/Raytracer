@@ -56,6 +56,7 @@ impl From<SerialCamera> for Camera {
             inp.position,
             inp.lookat,
             inp.up,
+            #[allow(clippy::cast_precision_loss)]
             to_radians(inp.horizontal_fov.angle as f32),
             inp.resolution.horizontal,
             inp.resolution.vertical,
@@ -367,7 +368,7 @@ impl SerialSurface {
                             "No material was given.".to_string(),
                         ))??
                 };
-                let triangles = parse(file).map_err(|err| {
+                let triangles = parse(&file).map_err(|err| {
                     InputError::new(format!("Error while parsing file '{}'", &name), err.msg)
                 })?;
                 let mut surface = Surface::mesh(triangles, material);
@@ -455,6 +456,7 @@ impl From<SerialLight> for Light {
                 color,
                 position,
                 direction,
+                #[allow(clippy::cast_precision_loss)]
                 falloff: (
                     to_radians(falloff.alpha1 as f32).cos(),
                     to_radians(falloff.alpha2 as f32).cos(),
@@ -515,11 +517,7 @@ impl SerialScene {
             self.output_file,
             self.background_color,
             self.camera.into(),
-            self.lights
-                .lights
-                .into_iter()
-                .map(|light| light.into())
-                .collect(),
+            self.lights.lights.into_iter().map(Into::into).collect(),
             self.surfaces
                 .surfaces
                 .into_iter()

@@ -24,6 +24,10 @@ where
 
 /// Read in an xml fie from the specified path and parse to a scene object
 /// The xml file should have the correct format as specified [here](https://teaching.vda.univie.ac.at/graphics/25s/Labs/Lab3/lab2_file_specification.html)
+///
+/// # Errors
+///
+/// Returns an error when the file could not be read or parsed correctly
 pub fn file_to_scene(path: &str) -> Result<Scene, InputError> {
     let mut path = PathBuf::from(path);
     let content = fs::read_to_string(&path).map_err(|err| err_to_input_err(err, &path))?;

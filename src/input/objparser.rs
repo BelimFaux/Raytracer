@@ -6,7 +6,7 @@ use super::InputError;
 type Triple = (u32, u32, u32);
 
 /// parses a `.obj` file to a list of triangles
-pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
+pub fn parse(src: &str) -> Result<Vec<Triangle>, InputError> {
     let mut vertices = Vec::new();
     let mut normals = Vec::new();
     let mut texture = Vec::new();
@@ -15,24 +15,21 @@ pub fn parse(src: String) -> Result<Vec<Triangle>, InputError> {
     for (current_line, line) in src.lines().enumerate() {
         let mut words = line.split_whitespace();
         if let Some(t) = words.next() {
+            let args: Vec<_> = words.collect();
             match t {
-                "v" => {
-                    vertices.push(parse_point(words.collect()).map_err(|s| err(current_line, &s))?)
-                }
-                "vn" => {
-                    normals.push(parse_point(words.collect()).map_err(|s| err(current_line, &s))?)
-                }
+                "v" => vertices.push(parse_point(&args).map_err(|s| err(current_line, &s))?),
+                "vn" => normals.push(parse_point(&args).map_err(|s| err(current_line, &s))?),
                 "vt" => {
-                    texture.push(parse_texel(words.collect()).map_err(|s| err(current_line, &s))?);
+                    texture.push(parse_texel(&args).map_err(|s| err(current_line, &s))?);
                 }
                 "f" => {
                     let (verts, tex, norm) =
-                        parse_face(words.collect()).map_err(|s| err(current_line, &s))?;
+                        parse_face(&args).map_err(|s| err(current_line, &s))?;
 
-                    let texcoords = if tex != (0, 0, 0) {
-                        get_elements(&texture, tex).map_err(|s| err(current_line, &s))?
-                    } else {
+                    let texcoords = if tex == (0, 0, 0) {
                         [(0., 0.); 3]
+                    } else {
+                        get_elements(&texture, tex).map_err(|s| err(current_line, &s))?
                     };
 
                     let tri = Triangle::new(
@@ -71,7 +68,7 @@ where
 /// parse a face line in the format:
 /// `v/vt/vn v/vt/vn v/vt/vn`
 /// where `v` is the vertex index, `vt` is the texture index and `vn` is the normal index
-fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple, Triple), String> {
+fn parse_face(line: &[&str]) -> Result<(Triple, Triple, Triple), String> {
     if line.len() != 3 {
         return Err(format!("Expected 3 elements but got {}", line.len()));
     }
@@ -81,7 +78,7 @@ fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple, Triple), String> {
     let mut normals = [0, 0, 0];
 
     for (i, elem) in line.iter().enumerate() {
-        let mut parts = elem.split("/");
+        let mut parts = elem.split('/');
         let (v, t, n) = (parts.next(), parts.next(), parts.next());
         if parts.next().is_some() {
             return Err(String::from("Face data contains more than 3 elements"));
@@ -106,7 +103,7 @@ fn parse_face(line: Vec<&str>) -> Result<(Triple, Triple, Triple), String> {
 }
 
 /// parse a single point in the format: `x y z`
-fn parse_point(line: Vec<&str>) -> Result<Point3, String> {
+fn parse_point(line: &[&str]) -> Result<Point3, String> {
     if line.len() != 3 {
         return Err(format!("Expected 3 elements but got {}", line.len()));
     }
@@ -121,7 +118,7 @@ fn parse_point(line: Vec<&str>) -> Result<Point3, String> {
 }
 
 /// parse a texel in the format: `u v`
-fn parse_texel(line: Vec<&str>) -> Result<(f32, f32), String> {
+fn parse_texel(line: &[&str]) -> Result<(f32, f32), String> {
     if line.len() != 2 {
         return Err(format!("Expected 2 elements but got {}", line.len()));
     }
@@ -154,7 +151,7 @@ mod tests {
 
     #[test]
     fn parse_objectfile_expect_plane_triangles() {
-        let filecontents = r#"
+        let filecontents = r"
             # Blender3D v249 OBJ File: 
             # www.blender3d.org
             v 1.000000 1.000000 0.000000
@@ -170,10 +167,10 @@ mod tests {
             s off
             f 1/1/1 4/2/1 3/3/1
             f 1/1/1 3/3/1 2/4/1
-        "#
+        "
         .to_string();
 
-        let mesh = parse(filecontents);
+        let mesh = parse(&filecontents);
 
         assert!(mesh.is_ok());
 

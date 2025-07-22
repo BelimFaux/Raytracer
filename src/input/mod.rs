@@ -17,6 +17,7 @@ pub struct InputError {
 }
 
 impl InputError {
+    #[must_use]
     pub fn new(title: String, msg: String) -> InputError {
         InputError { title, msg }
     }

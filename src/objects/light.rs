@@ -24,6 +24,7 @@ pub enum Light {
 
 impl Light {
     /// Calculate the shadow ray to the object from the point `from`
+    #[must_use]
     pub fn shadow_ray(&self, from: &Point3) -> Option<Ray> {
         match self {
             Self::Ambient { .. } => None,

@@ -41,7 +41,7 @@ impl Sphere {
 
     /// Set the end parameters (endposition, endradius)
     pub fn set_end(&mut self, e: (Point3, f32)) {
-        self.animation.end = Some(e)
+        self.animation.end = Some(e);
     }
 
     /// Calculates the coefficients (a, h, c) of the intersection formula
@@ -76,10 +76,10 @@ impl Sphere {
         } else {
             (h - discr) / a
         };
-        let p = with.at(t)?;
-        let n = p - self.center;
+        let point = with.at(t)?;
+        let normal = point - self.center;
 
-        Some((t, n, self.get_texel_at(&p)))
+        Some((t, normal, self.get_texel_at(&point)))
     }
 
     /// Compute the texel on the given point on the spheres surface
@@ -110,6 +110,6 @@ mod tests {
         assert!(sphere.intersection(&no_hit).is_none());
 
         let behind = Ray::new(Point3::zero(), Vec3::new(0., 0., 1.));
-        assert!(sphere.intersection(&behind).is_none())
+        assert!(sphere.intersection(&behind).is_none());
     }
 }

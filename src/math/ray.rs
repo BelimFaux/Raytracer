@@ -14,6 +14,7 @@ pub struct Ray {
 impl Ray {
     /// Create a new ray
     #[inline]
+    #[must_use]
     pub fn new(origin: Point3, direction: Vec3) -> Ray {
         Ray {
             origin,
@@ -24,6 +25,7 @@ impl Ray {
 
     /// Adds a maximum bound to the ray
     #[inline]
+    #[must_use]
     pub fn set_bounds(self, max_t: f32) -> Ray {
         Ray {
             origin: self.origin,
@@ -34,6 +36,7 @@ impl Ray {
 
     /// calculate the point on the ray for `t`
     #[inline]
+    #[must_use]
     pub fn at(&self, t: f32) -> Option<Point3> {
         if (0.0..=self.max_t).contains(&t) {
             Some(self.origin + t * self.direction)
@@ -44,7 +47,8 @@ impl Ray {
 
     /// Transform the ray with a transformation matrix
     ///
-    /// the ray direction might not be normalized after, but max_t will stay the same!
+    /// the ray direction might not be normalized after, but ``max_t`` will stay the same!
+    #[must_use]
     pub fn transform(&self, t: &Mat4) -> Ray {
         let orig = t.transform_point(&self.origin);
         let dir = t.transform_vector(&self.direction);
@@ -52,30 +56,35 @@ impl Ray {
     }
 
     /// Normalize the ray direction
+    #[must_use]
     pub fn normal(&self) -> Ray {
         Ray::new(self.origin, Vec3::normal(&self.direction))
     }
 
     /// determine if t value is in range for this ray
     #[inline]
+    #[must_use]
     pub fn t_in_range(&self, t: f32) -> bool {
         (0.0..=self.max_t).contains(&t)
     }
 
     /// get the direction of the ray
     #[inline]
+    #[must_use]
     pub fn dir(&self) -> &Vec3 {
         &self.direction
     }
 
     /// get the origin of the ray
     #[inline]
+    #[must_use]
     pub fn orig(&self) -> &Vec3 {
         &self.origin
     }
 
     /// get the maximum t bound
     #[inline]
+    #[must_use]
     pub fn max_t(&self) -> f32 {
         self.max_t
     }

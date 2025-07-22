@@ -1,21 +1,23 @@
 use std::fmt::Write;
 
-/// Manages a simple ProgressBar that prints to stdout
+/// Manages a simple Progressbar that prints to stdout
 pub struct ProgressBar {
     buffer: String, // reuse buffer for formatting to avoid allocations
     curr: usize,
     max: usize,
     msg: String,
-    last_percent: f32,
+    last_percent: f64,
 }
 
 impl ProgressBar {
     const RUNNER: &'static str = ">";
     const FULL_CHAR: &'static str = "#";
     const EMPTY_CHAR: &'static str = "-";
-    const WIDTH: f32 = 50.;
+    const WIDTH: f64 = 50.;
 
-    /// Create a new ProgressBar with the given maximum
+    /// Create a new ``ProgressBar`` with the given maximum
+    #[must_use]
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     pub fn new(max: usize, msg: String) -> ProgressBar {
         print!(
             "{} [{}{}] 0.00% (0/{})",
@@ -40,16 +42,19 @@ impl ProgressBar {
         self.next();
     }
 
-    /// Advances the ProgressBar by 1
+    /// Advances the progress bar by 1
     /// Only prints, if the difference of percentage exceeds some threshold
     pub fn next(&mut self) {
         self.curr += 1;
-        let percent = self.curr as f32 / self.max as f32;
+        #[allow(clippy::cast_precision_loss)]
+        let percent = self.curr as f64 / self.max as f64;
         if self.curr != self.max && percent - self.last_percent <= 0.001 {
             return;
         }
 
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         let full = (Self::WIDTH * percent) as usize;
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         let empty = Self::WIDTH as usize - full;
         let runner = if empty > 0 { Self::RUNNER } else { "" };
         let empty = if empty > 0 { empty - 1 } else { 0 };

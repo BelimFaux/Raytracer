@@ -109,6 +109,7 @@ impl JuliaSet {
 
     /// Normal estimation for point on a julia set
     /// taken from [this paper](https://www.cs.cmu.edu/~kmcrane/Projects/QuaternionJulia/paper.pdf)
+    #[allow(clippy::similar_names)]
     fn estimate_normal(&self, p: Point3) -> Vec3 {
         let qp = Quat::new(p[0], p[1], p[2], 0.);
 
@@ -137,14 +138,11 @@ impl JuliaSet {
 
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let with = Ray::new(*with.orig() - self.pos, *with.dir());
-        let t = if let Some(t) = Self::sphere_intersect(&with) {
-            t
-        } else {
+
+        let Some(t) = Self::sphere_intersect(&with) else {
             return false;
         };
-        let p = if let Some(p) = with.at(t) {
-            p
-        } else {
+        let Some(p) = with.at(t) else {
             return false;
         };
         let r = Ray::new(p, *with.dir());

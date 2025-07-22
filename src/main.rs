@@ -93,10 +93,10 @@ fn run() -> Result<(), InputError> {
     if !config.blur() && scene.is_animated() {
         img.save_apng(&mut outpath, scene.get_fps())?;
     } else if config.ppm() {
-        img.save_ppm(&mut outpath)?
+        img.save_ppm(&mut outpath)?;
     } else {
-        img.save_png(&mut outpath)?
-    };
+        img.save_png(&mut outpath)?;
+    }
 
     println!(
         "Successfully saved image to {}",

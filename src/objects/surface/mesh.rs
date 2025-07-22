@@ -15,6 +15,7 @@ impl Triangle {
 
     /// Create a new triangle from the edge points and the corresponding normals
     /// The normals and the points should be in the same order in the arrays
+    #[must_use]
     pub fn new(points: [Point3; 3], normals: [Vec3; 3], texcoords: [Texel; 3]) -> Triangle {
         Triangle {
             points,
@@ -39,6 +40,7 @@ impl Triangle {
 
     /// Test if the triangle intersects with the ray
     /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
+    #[must_use]
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
@@ -71,6 +73,7 @@ impl Triangle {
     /// Calculates the normal, the texel and the t value of the triangle and the `with` Ray if present
     /// using the [Moeller-Trombore algorithm](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html)
     /// Returns `None` if there is no intersection
+    #[must_use]
     pub fn intersection(&self, with: &Ray) -> Option<(Vec3, Texel, f32)> {
         let e1 = self.points[1] - self.points[0];
         let e2 = self.points[2] - self.points[0];
@@ -114,7 +117,7 @@ struct BoundingBox {
 
 impl BoundingBox {
     /// Constructs a bounding box that encapsulates all given points
-    pub fn from(points: Vec<Point3>) -> BoundingBox {
+    pub fn from(points: &[Point3]) -> BoundingBox {
         let cmp_f32 =
             |lhs: &f32, rhs: &f32| lhs.partial_cmp(rhs).expect("Points should not contain NaN");
 
@@ -133,6 +136,7 @@ impl BoundingBox {
 
     /// Determine if bounding box intersects with the ray
     /// using [Smits method](https://people.csail.mit.edu/amy/papers/box-jgt.pdf)
+    #[allow(clippy::similar_names)]
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let (tmin, tmax) = if with.dir()[0] >= 0. {
             (
@@ -200,7 +204,12 @@ pub(super) struct Mesh {
 impl Mesh {
     /// Create a new mesh
     pub fn new(triangles: Vec<Triangle>) -> Mesh {
-        let bounding_box = BoundingBox::from(triangles.iter().flat_map(|tri| tri.points).collect());
+        let bounding_box = BoundingBox::from(
+            &triangles
+                .iter()
+                .flat_map(|tri| tri.points)
+                .collect::<Vec<_>>(),
+        );
         Mesh {
             triangles,
             bounding_box,
@@ -209,10 +218,10 @@ impl Mesh {
 
     /// Test if the mesh intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
-        if !self.bounding_box.has_intersection(with) {
-            false
-        } else {
+        if self.bounding_box.has_intersection(with) {
             self.triangles.iter().any(|t| t.has_intersection(with))
+        } else {
+            false
         }
     }
 
@@ -254,7 +263,9 @@ mod tests {
         // should hit the triangle at point (0, 0, -1)
         let hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(triangle.has_intersection(&hit));
-        assert!(triangle.intersection(&hit).is_some_and(|(_, _, t)| t == 1.));
+        assert!(triangle
+            .intersection(&hit)
+            .is_some_and(|(_, _, t)| (t - 1.).abs() < f32::EPSILON));
 
         let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
         assert!(!triangle.has_intersection(&no_hit));
@@ -269,7 +280,7 @@ mod tests {
             Point3::new(0., 1., -1.),
         ];
 
-        let aabb = BoundingBox::from(points);
+        let aabb = BoundingBox::from(&points);
 
         assert_eq!(aabb.min, Vec3::new(-1., 0., -1.));
         assert_eq!(aabb.max, Vec3::new(1., 1., -1.));
@@ -286,7 +297,7 @@ mod tests {
             Point3::new(0., 1., 0.),
         ];
 
-        let aabb = BoundingBox::from(points);
+        let aabb = BoundingBox::from(&points);
 
         let hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
         assert!(aabb.has_intersection(&hit));

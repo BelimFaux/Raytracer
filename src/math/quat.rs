@@ -11,6 +11,7 @@ pub struct Quat {
 
 impl Quat {
     /// Create a new quaternion
+    #[must_use]
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Quat {
         Quat {
             r: x,
@@ -20,6 +21,7 @@ impl Quat {
 
     /// Computes the square of the quaternion
     /// Same as `q * q` but more efficient
+    #[must_use]
     pub fn square(&self) -> Quat {
         Quat {
             r: self.r * self.r - self.v.length_squared(),
@@ -28,11 +30,13 @@ impl Quat {
     }
 
     /// Compute the squared length of the quaternion
+    #[must_use]
     pub fn length_squared(&self) -> f32 {
         self.r * self.r + self.v.length_squared()
     }
 
     /// Compute the length of the quaternion
+    #[must_use]
     pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }

@@ -18,6 +18,7 @@ pub enum Texture {
 
 impl Texture {
     /// return the color at a given texel
+    #[must_use]
     pub fn get_color(&self, texel: Texel) -> Color {
         match self {
             Texture::Color(c) => *c,
@@ -69,6 +70,7 @@ impl ShadingModel {
     }
 
     /// Calculates the color according to the [cook-torrance model](https://graphicscompendium.com/references/cook-torrance)
+    #[allow(clippy::similar_names)]
     fn cook_torrance_color(
         ctparams: (f32, f32),
         light_color: &Color,
@@ -81,22 +83,22 @@ impl ShadingModel {
         let alpha2: f32 = alpha * alpha;
         let f0 = Vec3::new(0.56, 0.57, 0.58);
 
-        let l = -Vec3::normal(neg_light);
-        let n = Vec3::normal(vnormal);
-        let e = -Vec3::normal(neg_veye);
-        let h = Vec3::normal(&(e + l));
+        let light = -Vec3::normal(neg_light);
+        let normal = Vec3::normal(vnormal);
+        let eye = -Vec3::normal(neg_veye);
+        let half = Vec3::normal(&(eye + light));
         let s = ks;
         let d = 1. - s;
 
-        let ndotl = max(n.dot(&l), 0.);
-        let ndote = max(n.dot(&e), 0.);
+        let ndotl = max(normal.dot(&light), 0.);
+        let ndote = max(normal.dot(&eye), 0.);
 
         // Distribution of the microfacets (GGX)
-        let distribution = Self::d_ggx(n, h, alpha2);
+        let distribution = Self::d_ggx(normal, half, alpha2);
         // Geometric shadowing function (microfacets shadow or obstruct light)
-        let geo_shadowing = Self::g_ggx(n, h, e, l, alpha2);
+        let geo_shadowing = Self::g_ggx(normal, half, eye, light, alpha2);
         // Fresnel effect
-        let fresnel = Self::fresnel(f0, h, e);
+        let fresnel = Self::fresnel(f0, half, eye);
 
         // specular reflection using the cook-torrance model: (DGF) / 4 * (n*l) * (n*v)
         let r_s = (distribution * geo_shadowing * fresnel) / max(4.0 * ndotl * ndote, 0.00001); // dont divide by zero
@@ -122,11 +124,13 @@ impl ShadingModel {
         let diffuse = *light_color * frag_color * kd * max(l.dot(&n), 0.0);
         let r = Vec3::reflect(&l, &n);
         let e = -Vec3::normal(neg_veye);
+        #[allow(clippy::cast_precision_loss)]
         let specular = *light_color * ks * max(e.dot(&r), 0.0).powf(exp as f32);
         diffuse + specular
     }
 
     /// Calculate the color of the material with a light color using the specified shading model
+    #[must_use]
     pub fn shading_color(
         &self,
         light_color: &Color,
@@ -160,10 +164,10 @@ impl ShadingModel {
     }
 
     /// get the ambient coefficent of the shading model
+    #[must_use]
     pub fn ambient(&self) -> f32 {
         match self {
-            Self::Phong { ka, .. } => *ka,
-            Self::CookTorrance { ka, .. } => *ka,
+            Self::Phong { ka, .. } | Self::CookTorrance { ka, .. } => *ka,
         }
     }
 }
@@ -180,6 +184,7 @@ pub struct Material {
 
 impl Material {
     /// Create a new material
+    #[must_use]
     pub fn new(
         texture: Texture,
         reflectance: f32,
@@ -188,15 +193,16 @@ impl Material {
         shading: ShadingModel,
     ) -> Material {
         Material {
-            texture,
             reflectance,
             transmittance,
             refraction,
+            texture,
             shading,
         }
     }
 
     /// Calculate the color for the given light source when hitting a point with this material with a ray
+    #[must_use]
     pub fn get_color(
         &self,
         point: &Point3,
@@ -252,16 +258,19 @@ impl Material {
     }
 
     /// Getter for the reflectance
+    #[must_use]
     pub fn reflectance(&self) -> f32 {
         self.reflectance
     }
 
     /// Getter for the transmittance
+    #[must_use]
     pub fn transmittance(&self) -> f32 {
         self.transmittance
     }
 
     /// Getter for the refraction
+    #[must_use]
     pub fn refraction(&self) -> f32 {
         self.refraction
     }

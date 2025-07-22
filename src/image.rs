@@ -24,6 +24,7 @@ pub struct Image {
 impl Image {
     /// Create a new Image with the given dimensions
     /// The Image gets initialized black
+    #[must_use]
     pub fn new(width: u32, height: u32, frames: usize) -> Image {
         Image {
             width,
@@ -33,19 +34,21 @@ impl Image {
     }
 
     /// Load a png from the given path into an `Image`
-    /// returns an InputError if the file cannot be read or is not a valid png file
+    ///
+    /// # Errors
+    ///
+    /// returns an ``InputError`` if the file cannot be read or is not a valid png file
     pub fn load_png(path: &PathBuf) -> Result<Image, InputError> {
-        let file = File::open(path).map_err(|err| {
-            Self::io_err_to_input_err(err, path, "Error while reading image from")
-        })?;
+        let file = File::open(path)
+            .map_err(|err| Self::err_to_input_err(&err, path, "Error while reading image from"))?;
         let decoder = png::Decoder::new(file);
         let mut reader = decoder.read_info().map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while decoding image")
+            Self::err_to_input_err(&err.into(), path, "Error while decoding image")
         })?;
 
         let mut buf = vec![0; reader.output_buffer_size()];
         let info = reader.next_frame(&mut buf).map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while decoding image")
+            Self::err_to_input_err(&err.into(), path, "Error while decoding image")
         })?;
         let bytes = &buf[..info.buffer_size()];
         let imgbuf: Vec<_> = bytes.chunks(3).map(|a| [a[0], a[1], a[2]]).collect();
@@ -60,8 +63,17 @@ impl Image {
     }
 
     /// Return the images `Rgb` value at the given Texel `(u, v)`
+    ///
+    /// # Panics
+    ///
     /// will panic if `u` or `v` are not in range 0..1
+    #[must_use]
     pub fn get_pixel(&self, frame: usize, u: f32, v: f32) -> Rgb {
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            clippy::cast_precision_loss
+        )]
         let (x, y) = (
             (u * self.width as f32) as u32,
             (v * self.height as f32) as u32,
@@ -76,6 +88,10 @@ impl Image {
 
     /// Set each pixel from the corresponding x and y value
     /// Will try to use a parallel iterator for better performance
+    ///
+    /// # Panics
+    ///
+    /// when the image does not have enough frames
     pub fn par_init_pixels<OP>(&mut self, frame: usize, op: OP)
     where
         OP: Fn(&mut (u32, u32)) -> Rgb + Sync + Send,
@@ -105,7 +121,7 @@ impl Image {
     }
 
     /// format io error to input error
-    fn io_err_to_input_err(err: io::Error, path: &Path, msg: &str) -> InputError {
+    fn err_to_input_err(err: &io::Error, path: &Path, msg: &str) -> InputError {
         InputError::new(
             format!("{} {}", msg, path.to_str().unwrap_or("<INVALID_PATH>")),
             err.to_string(),
@@ -115,6 +131,10 @@ impl Image {
     /// average all frames in the image and place the result in the first frame
     /// for single frame images this shouldn't change anything. For images with multiple frames
     /// (animations) this will 'blur' any movement between the images
+    ///
+    /// # Panics
+    ///
+    /// when the image contains no frames
     pub fn average_frames(&mut self) {
         let mut t = self
             .buf
@@ -124,7 +144,7 @@ impl Image {
             .map(|frame| {
                 frame
                     .iter()
-                    .map(|px| [px[0] as u64, px[1] as u64, px[2] as u64])
+                    .map(|px| [u64::from(px[0]), u64::from(px[1]), u64::from(px[2])])
                     .collect()
             })
             .reduce(|acc: Vec<[u64; 3]>, frame| {
@@ -134,6 +154,7 @@ impl Image {
             })
             .expect("Image should contain atleast one frame");
         let frames = self.buf.len() as u64;
+        #[allow(clippy::cast_possible_truncation)]
         let t: Vec<_> = t
             .iter_mut()
             .map(|px| [px[0] / frames, px[1] / frames, px[2] / frames])
@@ -144,10 +165,15 @@ impl Image {
 
     /// Save the image as an animated png with the specified framerate
     /// for this to have any effect, the buffer should contain multiple frames
+    ///
+    /// # Errors
+    ///
+    /// Returns an ``InputError`` when the file couldn't be created or written to, or an error
+    /// occured while encoding
     pub fn save_apng(self, path: &mut PathBuf, fps: u16) -> Result<(), InputError> {
         path.set_extension("png");
         let file = File::create(&path)
-            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
+            .map_err(|err| Self::err_to_input_err(&err, path, "Error while saving image to"))?;
         let w = &mut BufWriter::new(file);
 
         let mut encoder = png::Encoder::new(w, self.width, self.height);
@@ -162,36 +188,56 @@ impl Image {
         );
         encoder.set_source_chromaticities(source_chromaticities);
         encoder
-            .set_animated(self.buf.len() as u32, 0)
+            .set_animated(
+                u32::try_from(self.buf.len()).map_err(|err| {
+                    InputError::new(
+                        format!(
+                            "Error while saving image to {}",
+                            path.to_str().unwrap_or("<INVALID_PATH>")
+                        ),
+                        err.to_string(),
+                    )
+                })?,
+                0,
+            )
             .map_err(|err| {
-                Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+                Self::err_to_input_err(&err.into(), path, "Error while saving image to")
             })?;
         encoder.set_frame_delay(1, fps).map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+            Self::err_to_input_err(&err.into(), path, "Error while saving image to")
         })?;
         let mut writer = encoder.write_header().map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+            Self::err_to_input_err(&err.into(), path, "Error while saving image to")
         })?;
 
         for frame in self.buf {
             writer
                 .write_image_data(frame.as_flattened())
                 .map_err(|err| {
-                    Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+                    Self::err_to_input_err(&err.into(), path, "Error while saving image to")
                 })?;
         }
 
-        writer.finish().map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
-        })
+        writer
+            .finish()
+            .map_err(|err| Self::err_to_input_err(&err.into(), path, "Error while saving image to"))
     }
 
     /// Saves the image as a png image to the specified path
     /// If the path does not already have the .png extension, it will be added
+    ///
+    /// # Errors
+    ///
+    /// Returns an ``InputError`` when the file couldn't be created or written to, or an error
+    /// occured while encoding
+    ///
+    /// # Panics
+    ///
+    /// If the image contains less than one frame
     pub fn save_png(self, path: &mut PathBuf) -> Result<(), InputError> {
         path.set_extension("png");
         let file = File::create(&path)
-            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
+            .map_err(|err| Self::err_to_input_err(&err, path, "Error while saving image to"))?;
         let w = &mut BufWriter::new(file);
 
         let mut encoder = png::Encoder::new(w, self.width, self.height);
@@ -206,7 +252,7 @@ impl Image {
         );
         encoder.set_source_chromaticities(source_chromaticities);
         let mut writer = encoder.write_header().map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+            Self::err_to_input_err(&err.into(), path, "Error while saving image to")
         })?;
 
         writer
@@ -217,24 +263,33 @@ impl Image {
                     .as_flattened(),
             )
             .map_err(|err| {
-                Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
+                Self::err_to_input_err(&err.into(), path, "Error while saving image to")
             })?;
 
-        writer.finish().map_err(|err| {
-            Self::io_err_to_input_err(err.into(), path, "Error while saving image to")
-        })
+        writer
+            .finish()
+            .map_err(|err| Self::err_to_input_err(&err.into(), path, "Error while saving image to"))
     }
 
     /// Saves the image as a ppm image to the specified path
     /// If the path does not already have the .ppm extension, it will be added
+    ///
+    /// # Errors
+    ///
+    /// Returns an ``InputError`` when the file couldn't be created or written to, or an error
+    /// occured while encoding
+    ///
+    /// # Panics
+    ///
+    /// If the image contains less than one frame
     pub fn save_ppm(self, path: &mut PathBuf) -> Result<(), InputError> {
         path.set_extension("ppm");
         let file = File::create(&path)
-            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
+            .map_err(|err| Self::err_to_input_err(&err, path, "Error while saving image to"))?;
         let mut w = BufWriter::new(file);
 
         w.write_all(format!("P6 {} {} 255\n", self.width, self.height).as_bytes())
-            .map_err(|err| Self::io_err_to_input_err(err, path, "Error while saving image to"))?;
+            .map_err(|err| Self::err_to_input_err(&err, path, "Error while saving image to"))?;
 
         for pixel in self
             .buf
@@ -242,9 +297,8 @@ impl Image {
             .expect("image should contain atleast one frame")
             .as_slice()
         {
-            w.write_all(pixel).map_err(|err| {
-                Self::io_err_to_input_err(err, path, "Error while saving image to")
-            })?;
+            w.write_all(pixel)
+                .map_err(|err| Self::err_to_input_err(&err, path, "Error while saving image to"))?;
         }
 
         Ok(())

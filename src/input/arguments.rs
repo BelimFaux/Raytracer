@@ -105,7 +105,7 @@ fn print_help() {
                 default,
                 placeholder,
             } => (format!("(default: '{default}')"), placeholder),
-            _ => ("".to_string(), ""),
+            OptAction::Toggle => (String::new(), ""),
         };
         let length = maxlen - opt.long.len() + 2 - placeholder.len();
         println!(
@@ -146,7 +146,7 @@ impl Config {
         }
     }
 
-    /// Convert a message to a argument specific InputError
+    /// Convert a message to a argument specific ``InputError``
     fn parse_err(msg: &str) -> InputError {
         InputError::new("Error while parsing Arguments".to_string(), msg.to_string())
     }
@@ -156,7 +156,7 @@ impl Config {
         I: Iterator<Item = &'a String>,
     {
         match opt.action {
-            OptAction::Toggle => self.options.insert(opt.long, String::from("")),
+            OptAction::Toggle => self.options.insert(opt.long, String::new()),
             OptAction::Set { .. } => self.options.insert(
                 opt.long,
                 iter.next()
@@ -172,6 +172,11 @@ impl Config {
 
     /// Build a config from a slice of Strings containing the arguments
     /// If this function returns Ok but with a None value, the program should exit early
+    ///
+    /// # Errors
+    ///
+    /// Returns an ``InputError`` when there are errors in the arguments, such as missing required
+    /// required arguments or unknown options
     pub fn build(args: &[String]) -> Result<Option<Config>, InputError> {
         let mut config = Config::default();
         let mut unparsed = Vec::new();
@@ -207,7 +212,7 @@ impl Config {
             .first()
             .ok_or(Self::parse_err("Missing input path"))?;
 
-        config.input_file = file.to_string();
+        config.input_file = (*file).to_string();
 
         Ok(Some(config))
     }
@@ -236,18 +241,23 @@ impl Config {
             .collect()
     }
 
+    #[must_use]
     pub fn progress_bar(&self) -> bool {
         self.options.contains_key("progress-bar")
     }
 
+    #[must_use]
     pub fn ppm(&self) -> bool {
         self.options.contains_key("ppm")
     }
 
+    #[must_use]
     pub fn blur(&self) -> bool {
         self.options.contains_key("blur")
     }
 
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
     pub fn outdir(&self) -> &str {
         self.options
             .get("outdir")
@@ -263,6 +273,7 @@ impl Config {
     }
 
     /// get a referencee to the provided input file path
+    #[must_use]
     pub fn get_input(&self) -> &str {
         &self.input_file
     }

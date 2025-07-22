@@ -41,6 +41,7 @@ pub struct Surface {
 
 impl Surface {
     /// Create a new sphere object from a radius and center
+    #[must_use]
     pub fn sphere(center: Point3, radius: f32, material: Material) -> Surface {
         Surface {
             obj: Object::Sphere(Sphere::new(center, radius)),
@@ -50,6 +51,7 @@ impl Surface {
     }
 
     /// Create a new mesh object from a triangle soup
+    #[must_use]
     pub fn mesh(triangles: Vec<Triangle>, material: Material) -> Surface {
         Surface {
             obj: Object::Mesh(Box::new(Mesh::new(triangles))),
@@ -60,6 +62,7 @@ impl Surface {
 
     /// Create a new julia set object with a position, a constant and the given maximum iterations
     /// and epsilon
+    #[must_use]
     pub fn julia_set(
         pos: Point3,
         c: Quat,
@@ -96,11 +99,12 @@ impl Surface {
         match &mut self.obj {
             Object::Sphere(s) => s.set_frame(w),
             Object::JuliaSet(j) => j.set_frame(w),
-            _ => (),
+            Object::Mesh(_) => (),
         }
     }
 
     /// Determine if this surface intersects with the ray
+    #[must_use]
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let with = if let Some(t) = &self.transform {
             with.transform(&t.transform)
@@ -116,6 +120,7 @@ impl Surface {
     }
 
     /// Calculate the intersection of the surface and the ray if it exists
+    #[must_use]
     pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
         let original_ray = with;
         let with = if let Some(t) = &self.transform {
@@ -150,6 +155,6 @@ impl Surface {
         self.transform = Some(Box::new(Transform {
             transform,
             normal_transform,
-        }))
+        }));
     }
 }

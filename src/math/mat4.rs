@@ -10,6 +10,7 @@ pub struct Mat4 {
 impl Mat4 {
     /// create an identity matrix
     #[inline]
+    #[must_use]
     pub fn identity() -> Mat4 {
         #[rustfmt::skip]
         let vals = [
@@ -25,6 +26,7 @@ impl Mat4 {
     /// create a mat4 look at function for camera transformations
     /// takes in the camera position `from`, the point to look at `at`, and the `up` vector
     #[inline]
+    #[must_use]
     pub fn look_at(from: Point3, at: Point3, up: Vec3) -> Mat4 {
         let z = Vec3::normal(&(from - at));
         let x = Vec3::normal(&up.cross(&z));
@@ -43,6 +45,7 @@ impl Mat4 {
 
     /// Creates a matrix from a translation vector
     #[inline]
+    #[must_use]
     pub fn from_translation(diff: Vec3) -> Mat4 {
         #[rustfmt::skip]
         let vals = [
@@ -57,6 +60,7 @@ impl Mat4 {
 
     /// Create a matrix, that rotates around the x-axis by the given amount in radians
     #[inline]
+    #[must_use]
     pub fn from_x_rotation(rad: f32) -> Mat4 {
         let sin_r = rad.sin();
         let cos_r = rad.cos();
@@ -74,6 +78,7 @@ impl Mat4 {
 
     /// Create a matrix, that rotates around the y-axis by the given amount in radians
     #[inline]
+    #[must_use]
     pub fn from_y_rotation(rad: f32) -> Mat4 {
         let sin_r = rad.sin();
         let cos_r = rad.cos();
@@ -91,6 +96,7 @@ impl Mat4 {
 
     /// Create a matrix, that rotates around the z-axis by the given amount in radians
     #[inline]
+    #[must_use]
     pub fn from_z_rotation(rad: f32) -> Mat4 {
         let sin_r = rad.sin();
         let cos_r = rad.cos();
@@ -108,6 +114,7 @@ impl Mat4 {
 
     /// Create a matrix that scales by the given amount in x, y, and z direction
     #[inline]
+    #[must_use]
     pub fn from_scaling(scale: Vec3) -> Mat4 {
         let s = scale;
 
@@ -124,6 +131,7 @@ impl Mat4 {
 
     /// Create a matrix that is the transpose of the given matrix
     #[inline]
+    #[must_use]
     pub fn transpose(mat: &Mat4) -> Mat4 {
         let a = mat.vals;
 
@@ -140,12 +148,14 @@ impl Mat4 {
 
     /// Multiply a point (w = 1) with the matrix
     #[inline]
+    #[must_use]
     pub fn transform_point(&self, p: &Point3) -> Point3 {
         self.multiply_vec4([p[0], p[1], p[2], 1.])
     }
 
     /// Multiply a vector (w = 0) with the matrix
     #[inline]
+    #[must_use]
     pub fn transform_vector(&self, v: &Vec3) -> Vec3 {
         self.multiply_vec4([v[0], v[1], v[2], 0.])
     }
@@ -153,16 +163,16 @@ impl Mat4 {
     /// Multiply any vec4 with the matrix and return a vec3
     #[inline]
     fn multiply_vec4(&self, vec: [f32; 4]) -> Vec3 {
-        let m = self.vals;
+        let mat = self.vals;
         let x = vec[0];
         let y = vec[1];
         let z = vec[2];
         let w = vec[3];
 
         Vec3::new(
-            m[0] * x + m[1] * y + m[2] * z + m[3] * w,
-            m[4] * x + m[5] * y + m[6] * z + m[7] * w,
-            m[8] * x + m[9] * y + m[10] * z + m[11] * w,
+            mat[0] * x + mat[1] * y + mat[2] * z + mat[3] * w,
+            mat[4] * x + mat[5] * y + mat[6] * z + mat[7] * w,
+            mat[8] * x + mat[9] * y + mat[10] * z + mat[11] * w,
         )
     }
 }

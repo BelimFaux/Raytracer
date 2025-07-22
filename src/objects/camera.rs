@@ -14,6 +14,8 @@ pub struct Camera {
 
 impl Camera {
     /// Create a new camera
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn new(
         pos: Point3,
         lookat: Point3,
@@ -38,15 +40,18 @@ impl Camera {
 
     /// Add depth of field parameters to the camera
     pub fn add_dof(&mut self, focal_distance: f32, aperture: f32) {
-        self.dof = Some((focal_distance, aperture))
+        self.dof = Some((focal_distance, aperture));
     }
 
     /// Return the image dimensions of the camera
+    #[must_use]
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     pub fn get_dimensions(&self) -> (u32, u32) {
         (self.width as u32, self.height as u32)
     }
 
     /// Return the maximum bounces for the camera
+    #[must_use]
     pub fn get_max_bounces(&self) -> u32 {
         self.max_bounces
     }
@@ -61,26 +66,30 @@ impl Camera {
         // offset ray if dof is set
         if let Some((focal_distance, aperture)) = self.dof {
             let focal_point = focal_distance * pcamera;
-            let o = orig
+            let orig = orig
                 + Vec3::new(
                     rand::random_range(-aperture..aperture),
                     rand::random_range(-aperture..aperture),
                     0.,
                 );
-            let dir = focal_point - o;
+            let dir = focal_point - orig;
 
-            Ray::new(o, dir).transform(&self.transform).normal()
+            Ray::new(orig, dir).transform(&self.transform).normal()
         } else {
             Ray::new(orig, pcamera).transform(&self.transform).normal()
         }
     }
 
     /// Construct a camera ray through pixel `(u, v)`
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn get_ray_through(&self, u: u32, v: u32) -> Ray {
         self.compute_camera_ray(u as f32, v as f32)
     }
 
     /// Return a randomly sampled ray through the pixel `(u, v)`
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn get_sample_ray_through(&self, u: u32, v: u32) -> Ray {
         let u = u as f32 + rand::random_range(-0.5..0.5);
         let v = v as f32 + rand::random_range(-0.5..0.5);

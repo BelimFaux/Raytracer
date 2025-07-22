@@ -23,6 +23,12 @@ impl Color {
     /// Convert a color with values in range 0 to 1 to an RGB value with values from 0 to 255
     /// The components get clamped at 0 and 1
     #[inline]
+    #[must_use]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
     pub fn to_rgb(self) -> image::Rgb {
         let r = (255.999 * self.x.clamp(0.0, 1.0)) as u8;
         let g = (255.999 * self.y.clamp(0.0, 1.0)) as u8;
@@ -32,10 +38,11 @@ impl Color {
 
     /// Construct a color with values in range 0..1 from an Rgb value with values in range 0..255
     #[inline]
+    #[must_use]
     pub fn from(rgb: image::Rgb) -> Color {
-        let r = rgb[0] as f32 / 255.999;
-        let g = rgb[1] as f32 / 255.999;
-        let b = rgb[2] as f32 / 255.999;
+        let r = f32::from(rgb[0]) / 255.999;
+        let g = f32::from(rgb[1]) / 255.999;
+        let b = f32::from(rgb[2]) / 255.999;
         Color { x: r, y: g, z: b }
     }
 }
@@ -43,12 +50,14 @@ impl Color {
 impl Vec3 {
     /// Create a new Vector from 3 floats
     #[inline]
+    #[must_use]
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x, y, z }
     }
 
     /// Create a normal from a vector
     #[inline]
+    #[must_use]
     pub fn normal(from: &Vec3) -> Vec3 {
         let length = from.length();
         Vec3 {
@@ -60,6 +69,7 @@ impl Vec3 {
 
     /// Creates a Vector with all components = 0
     #[inline]
+    #[must_use]
     pub fn zero() -> Vec3 {
         Vec3 {
             x: 0.,
@@ -70,12 +80,14 @@ impl Vec3 {
 
     /// computes the dot product
     #[inline]
+    #[must_use]
     pub fn dot(&self, rhs: &Vec3) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     /// computes the cross product of self x rhs (not commutative)
     #[inline]
+    #[must_use]
     pub fn cross(&self, rhs: &Vec3) -> Vec3 {
         Vec3 {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -86,6 +98,7 @@ impl Vec3 {
 
     /// returnes the length of the vector
     #[inline]
+    #[must_use]
     pub fn length(&self) -> f32 {
         f32::sqrt(self.length_squared())
     }
@@ -93,6 +106,7 @@ impl Vec3 {
     /// returnes the square of the length of the vector
     /// more efficient for comparisons
     #[inline]
+    #[must_use]
     pub fn length_squared(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -106,6 +120,7 @@ impl Vec3 {
     /// calculate the reflection direction from the given incident vector `i` and the normal `n`
     /// `i - 2.0 * dot(n, i) * n`
     #[inline]
+    #[must_use]
     pub fn reflect(i: &Vec3, n: &Vec3) -> Vec3 {
         *i - 2.0 * n.dot(i) * *n
     }
@@ -330,10 +345,10 @@ mod test {
         let v1 = Vec3::new(1., 2., 3.);
         let v2 = Vec3::new(4., 5., 6.);
 
-        let exp_dot = 32.;
+        let exp_dot = 32f32;
 
-        assert_eq!(v1.dot(&v2), exp_dot);
-        assert_eq!(v2.dot(&v1), exp_dot);
+        assert!((v1.dot(&v2) - exp_dot).abs() < f32::EPSILON);
+        assert!((v2.dot(&v1) - exp_dot).abs() < f32::EPSILON);
 
         let exp_cross = Vec3::new(-3., 6., -3.);
 
@@ -345,12 +360,12 @@ mod test {
     fn vector_length() {
         let mut v1 = Vec3::new(1., 2., 2.);
 
-        assert_eq!(v1.length_squared(), 9.);
-        assert_eq!(v1.length(), 3.);
+        assert!((v1.length_squared() - 9.).abs() < f32::EPSILON);
+        assert!((v1.length() - 3.).abs() < f32::EPSILON);
 
         v1.normalize();
 
-        assert_eq!(v1.length(), 1.);
+        assert!((v1.length() - 1.).abs() < f32::EPSILON);
     }
 
     #[test]
