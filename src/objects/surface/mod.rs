@@ -121,7 +121,7 @@ impl Surface {
 
     /// Calculate the intersection of the surface and the ray if it exists
     #[must_use]
-    pub fn intersection(&self, with: &Ray) -> Option<Intersection> {
+    pub fn intersection(&self, with: &Ray) -> Option<Intersection<'_>> {
         let original_ray = with;
         let with = if let Some(t) = &self.transform {
             with.transform(&t.transform)

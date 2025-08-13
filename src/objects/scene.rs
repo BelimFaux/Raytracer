@@ -106,7 +106,7 @@ impl Scene {
 
     /// Find the closest intersection of a ray with any surface in the scene
     /// Returns None if no surface intersects with the ray
-    fn closest_intersection(&self, with: &Ray) -> Option<Intersection> {
+    fn closest_intersection(&self, with: &Ray) -> Option<Intersection<'_>> {
         self.surfaces
             .iter()
             // map each sphere to it's intersection with the ray if it exists
