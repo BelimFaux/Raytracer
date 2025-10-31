@@ -212,7 +212,7 @@ impl Config {
             .first()
             .ok_or(Self::parse_err("Missing input path"))?;
 
-        config.input_file = (*file).to_string();
+        config.input_file.clone_from(*file);
 
         Ok(Some(config))
     }
