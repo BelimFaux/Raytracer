@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "A (whitted) Raytracer written in Rust that can render images and simple animations"
 license = "MIT"
-repository = "https://github.com/BelimFaux/Raytracer"
+repository = "https://codeberg.org/belim_faux/Raytracer"
 keywords = ["raytracing", "whitted-ray-tracing", "computer-graphics", "animations", "raytracing-one-weekend"]
 categories = ["graphics", "rendering", "multimedia::images", "command-line-utilities"]
 
