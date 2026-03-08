@@ -41,12 +41,19 @@ impl Image {
     pub fn load_png(path: &PathBuf) -> Result<Image, InputError> {
         let file = File::open(path)
             .map_err(|err| Self::err_to_input_err(&err, path, "Error while reading image from"))?;
-        let decoder = png::Decoder::new(file);
+        let decoder = png::Decoder::new(io::BufReader::new(file));
         let mut reader = decoder.read_info().map_err(|err| {
             Self::err_to_input_err(&err.into(), path, "Error while decoding image")
         })?;
 
-        let mut buf = vec![0; reader.output_buffer_size()];
+        let bufsize = reader.output_buffer_size().ok_or(InputError::new(
+            format!(
+                "Error while reading file {}",
+                path.to_str().unwrap_or("<INVALID_PATH>")
+            ),
+            String::from("buffer size does not fit in memory space of this machine"),
+        ))?;
+        let mut buf = vec![0; bufsize];
         let info = reader.next_frame(&mut buf).map_err(|err| {
             Self::err_to_input_err(&err.into(), path, "Error while decoding image")
         })?;

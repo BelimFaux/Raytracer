@@ -13,11 +13,11 @@ name = "rt"
 path = "src/lib.rs"
 
 [dependencies]
-png = "0.17.16"
-quick-xml = { version = "0.38.0", features = ["serialize"] }
+png = "0.18.1"
+quick-xml = { version = "0.39.2", features = ["serialize"] }
 serde = { version = "1.0.219", features = ["derive"] }
 rayon = "1.10.0"
-rand = "0.9.1"
+rand = "0.10.0"
 
 [lints.clippy]
 all = "deny"
