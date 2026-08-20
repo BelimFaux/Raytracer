@@ -351,7 +351,7 @@ impl SerialSurface {
                 path.set_file_name(&name);
                 let file = fs::read_to_string(&mut *path).map_err(|err| {
                     InputError::new(
-                        format!("Error while reading file '{}'", &name),
+                        format!("Error while reading file '{name}'"),
                         err.to_string(),
                     )
                 })?;
@@ -369,7 +369,7 @@ impl SerialSurface {
                         ))??
                 };
                 let triangles = parse(&file).map_err(|err| {
-                    InputError::new(format!("Error while parsing file '{}'", &name), err.msg)
+                    InputError::new(format!("Error while parsing file '{name}'"), err.msg)
                 })?;
                 let mut surface = Surface::mesh(triangles, material);
                 if let Some(t) = transform {
