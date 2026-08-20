@@ -45,7 +45,10 @@ fn run() -> Result<(), InputError> {
     let progress_thread = if config.progress_bar() {
         let mut frame = 1;
         let mut pixels_processed = 0;
-        let mut progress = ProgressBar::new((width * height) as usize, String::from("Frame 1:"));
+        let mut progress = ProgressBar::new(
+            (width * height) as usize * frames,
+            format!("Frame 1/{frames}:"),
+        );
 
         let handle = std::thread::spawn(move || {
             while rx.recv().is_ok() {
@@ -57,7 +60,7 @@ fn run() -> Result<(), InputError> {
                     if frame > frames {
                         break;
                     }
-                    progress.reset(format!("Frame {frame}:"));
+                    progress.reset_msg(format!("Frame {frame}/{frames}:"));
                 }
             }
         });
@@ -85,7 +88,7 @@ fn run() -> Result<(), InputError> {
     if let Some(handle) = progress_thread {
         let _ = handle.join();
     }
-    println!("Finished rendering, saving image...");
+    println!("\nFinished rendering, saving image...");
 
     if config.blur() {
         img.average_frames();

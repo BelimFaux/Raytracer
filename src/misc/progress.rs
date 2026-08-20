@@ -35,11 +35,9 @@ impl ProgressBar {
         }
     }
 
-    pub fn reset(&mut self, msg: String) {
+    /// Resets the message
+    pub fn reset_msg(&mut self, msg: String) {
         self.msg = msg;
-        self.curr = 0;
-        self.last_percent = -1.;
-        self.next();
     }
 
     /// Advances the progress bar by 1
@@ -63,15 +61,14 @@ impl ProgressBar {
 
         write!(
             self.buffer,
-            "\r{} [{}{}{}] {:.2}% ({}/{}){}",
+            "\r{} [{}{}{}] {:.2}% ({}/{}) ",
             self.msg,
             Self::FULL_CHAR.repeat(full),
             runner,
             Self::EMPTY_CHAR.repeat(empty),
             percent * 100.,
             self.curr,
-            self.max,
-            if self.curr == self.max { '\n' } else { ' ' }
+            self.max
         )
         .unwrap();
 
