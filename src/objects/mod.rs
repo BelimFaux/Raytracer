@@ -1,11 +1,13 @@
 //! objects module
 //! contains objects that lie inside the scene
 
+mod acceleration;
 mod camera;
 mod light;
 mod scene;
 mod surface;
 
+pub use crate::objects::acceleration::{BoundingBox, TriangleSoup};
 pub use crate::objects::camera::Camera;
 pub use crate::objects::light::Light;
 pub use crate::objects::scene::Scene;

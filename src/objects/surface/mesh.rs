@@ -1,11 +1,14 @@
-use crate::math::{max, min, Point3, Ray, Vec3};
+use crate::{
+    math::{Point3, Ray, Vec3},
+    objects::{BoundingBox, TriangleSoup},
+};
 
 use super::Texel;
 
 /// struct to represent a triangle in 3D-Space
 #[derive(Debug, PartialEq)]
 pub struct Triangle {
-    points: [Point3; 3],
+    pub points: [Point3; 3],
     normals: [Vec3; 3],
     texcoords: [Texel; 3],
 }
@@ -108,96 +111,12 @@ impl Triangle {
     }
 }
 
-/// Axis-aligned bounding box (AABB)
-#[derive(Clone, Debug)]
-struct BoundingBox {
-    min: Vec3,
-    max: Vec3,
-}
-
-impl BoundingBox {
-    /// Constructs a bounding box that encapsulates all given points
-    pub fn from(points: &[Point3]) -> BoundingBox {
-        let cmp_f32 =
-            |lhs: &f32, rhs: &f32| lhs.partial_cmp(rhs).expect("Points should not contain NaN");
-
-        let min_x = points.iter().map(|p| p[0]).min_by(cmp_f32).unwrap_or(0.);
-        let max_x = points.iter().map(|p| p[0]).max_by(cmp_f32).unwrap_or(0.);
-        let min_y = points.iter().map(|p| p[1]).min_by(cmp_f32).unwrap_or(0.);
-        let max_y = points.iter().map(|p| p[1]).max_by(cmp_f32).unwrap_or(0.);
-        let min_z = points.iter().map(|p| p[2]).min_by(cmp_f32).unwrap_or(0.);
-        let max_z = points.iter().map(|p| p[2]).max_by(cmp_f32).unwrap_or(0.);
-
-        BoundingBox {
-            min: Vec3::new(min_x, min_y, min_z),
-            max: Vec3::new(max_x, max_y, max_z),
-        }
-    }
-
-    /// Determine if bounding box intersects with the ray
-    /// using [Smits method](https://people.csail.mit.edu/amy/papers/box-jgt.pdf)
-    #[allow(clippy::similar_names)]
-    pub fn has_intersection(&self, with: &Ray) -> bool {
-        let (tmin, tmax) = if with.dir()[0] >= 0. {
-            (
-                (self.min[0] - with.orig()[0]) / with.dir()[0],
-                (self.max[0] - with.orig()[0]) / with.dir()[0],
-            )
-        } else {
-            (
-                (self.max[0] - with.orig()[0]) / with.dir()[0],
-                (self.min[0] - with.orig()[0]) / with.dir()[0],
-            )
-        };
-
-        let (tymin, tymax) = if with.dir()[1] >= 0. {
-            (
-                (self.min[1] - with.orig()[1]) / with.dir()[1],
-                (self.max[1] - with.orig()[1]) / with.dir()[1],
-            )
-        } else {
-            (
-                (self.max[1] - with.orig()[1]) / with.dir()[1],
-                (self.min[1] - with.orig()[1]) / with.dir()[1],
-            )
-        };
-
-        if (tmin > tymax) || (tymin > tmax) {
-            return false;
-        }
-
-        let tmin = max(tmin, tymin);
-        let tmax = min(tmax, tymax);
-
-        let (tzmin, tzmax) = if with.dir()[2] >= 0. {
-            (
-                (self.min[2] - with.orig()[2]) / with.dir()[2],
-                (self.max[2] - with.orig()[2]) / with.dir()[2],
-            )
-        } else {
-            (
-                (self.max[2] - with.orig()[2]) / with.dir()[2],
-                (self.min[2] - with.orig()[2]) / with.dir()[2],
-            )
-        };
-
-        if (tmin > tzmax) || (tzmin > tmax) {
-            return false;
-        }
-
-        let tmin = max(tmin, tzmin);
-        let tmax = min(tmax, tzmax);
-
-        (tmin < with.max_t()) && (tmax > 0.)
-    }
-}
-
 /// struct to represent a mesh in a 3D-Space
 /// Holds a Triangle 'soup' and material
 /// also contains a bounding box to speed up intersection tests
 #[derive(Debug)]
 pub(super) struct Mesh {
-    triangles: Vec<Triangle>,
+    triangles: TriangleSoup,
     bounding_box: BoundingBox,
 }
 
@@ -211,7 +130,7 @@ impl Mesh {
                 .collect::<Vec<_>>(),
         );
         Mesh {
-            triangles,
+            triangles: TriangleSoup::new(triangles),
             bounding_box,
         }
     }
@@ -219,7 +138,7 @@ impl Mesh {
     /// Test if the mesh intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
         if self.bounding_box.has_intersection(with) {
-            self.triangles.iter().any(|t| t.has_intersection(with))
+            self.triangles.has_intersection(with)
         } else {
             false
         }
@@ -231,14 +150,7 @@ impl Mesh {
         if !self.bounding_box.has_intersection(with) {
             return None;
         }
-
-        let (normal, texel, t) = self
-            .triangles
-            .iter()
-            .filter_map(|t| t.intersection(with))
-            .min_by(|lhs, rhs| lhs.2.partial_cmp(&rhs.2).expect("t should not be NaN"))?;
-
-        Some((t, normal, texel))
+        self.triangles.intersection(with)
     }
 }
 
@@ -270,39 +182,5 @@ mod tests {
         let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
         assert!(!triangle.has_intersection(&no_hit));
         assert!(triangle.intersection(&no_hit).is_none());
-    }
-
-    #[test]
-    fn construct_bounding_box() {
-        let points = vec![
-            Point3::new(-1., 0., -1.),
-            Point3::new(1., 0., -1.),
-            Point3::new(0., 1., -1.),
-        ];
-
-        let aabb = BoundingBox::from(&points);
-
-        assert_eq!(aabb.min, Vec3::new(-1., 0., -1.));
-        assert_eq!(aabb.max, Vec3::new(1., 1., -1.));
-    }
-
-    #[test]
-    fn intersect_bounding_box() {
-        let points = vec![
-            Point3::new(-1., 0., -1.),
-            Point3::new(1., 0., -1.),
-            Point3::new(0., 1., -1.),
-            Point3::new(-1., 0., 0.),
-            Point3::new(1., 0., 0.),
-            Point3::new(0., 1., 0.),
-        ];
-
-        let aabb = BoundingBox::from(&points);
-
-        let hit = Ray::new(Point3::zero(), Vec3::new(0., 0., -1.));
-        assert!(aabb.has_intersection(&hit));
-
-        let no_hit = Ray::new(Point3::zero(), Vec3::new(0., 1., 1.));
-        assert!(!aabb.has_intersection(&no_hit));
     }
 }

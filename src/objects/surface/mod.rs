@@ -13,7 +13,7 @@ pub use intersection::Intersection;
 pub use material::{Material, ShadingModel, Texture};
 pub use mesh::Triangle;
 
-type Texel = (f32, f32);
+pub type Texel = (f32, f32);
 
 /// either a sphere or a mesh
 #[derive(Debug)]
