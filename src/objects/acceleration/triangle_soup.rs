@@ -9,10 +9,12 @@ pub struct TriangleSoup {
 }
 
 impl TriangleSoup {
+    #[must_use]
     pub fn new(triangles: Vec<Triangle>) -> TriangleSoup {
         TriangleSoup { triangles }
     }
 
+    #[must_use]
     pub fn get_bounding_box(&self) -> BoundingBox {
         BoundingBox::from(
             &self
@@ -23,10 +25,17 @@ impl TriangleSoup {
         )
     }
 
+    #[must_use]
     pub fn has_intersection(&self, with: &Ray) -> bool {
         self.triangles.iter().any(|t| t.has_intersection(with))
     }
 
+    #[must_use]
+    /// Get the closest intersection with any triangle if one exists
+    ///
+    /// # Panics
+    ///
+    /// if any of the points contain a NaN value
     pub fn intersection(&self, with: &Ray) -> Option<(f32, Vec3, Texel)> {
         let (normal, texel, t) = self
             .triangles

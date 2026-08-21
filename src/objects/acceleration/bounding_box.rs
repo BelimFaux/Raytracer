@@ -1,6 +1,6 @@
 use crate::math::{max, min, Point3, Ray, Vec3};
 /// Axis-aligned bounding box (AABB)
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct BoundingBox {
     min: Vec3,
     max: Vec3,
@@ -8,6 +8,11 @@ pub struct BoundingBox {
 
 impl BoundingBox {
     /// Constructs a bounding box that encapsulates all given points
+    ///
+    /// # Panics
+    ///
+    /// If any of the points contain a NaN value
+    #[must_use]
     pub fn from(points: &[Point3]) -> BoundingBox {
         let cmp_f32 =
             |lhs: &f32, rhs: &f32| lhs.partial_cmp(rhs).expect("Points should not contain NaN");
@@ -25,9 +30,46 @@ impl BoundingBox {
         }
     }
 
+    pub fn union<TIter>(aabbs: TIter) -> BoundingBox
+    where
+        TIter: Iterator<Item = BoundingBox>,
+    {
+        let init = BoundingBox {
+            min: Vec3::zero(),
+            max: Vec3::zero(),
+        };
+        aabbs.fold(init, |mut acc, elem| {
+            acc.min[0] = min(acc.min[0], elem.min[0]);
+            acc.min[1] = min(acc.min[1], elem.min[1]);
+            acc.min[2] = min(acc.min[2], elem.min[2]);
+            acc.max[0] = max(acc.max[0], elem.max[0]);
+            acc.max[1] = max(acc.max[1], elem.max[1]);
+            acc.max[2] = max(acc.max[2], elem.max[2]);
+            acc
+        })
+    }
+
+    #[must_use]
+    pub fn centroid(&self) -> Point3 {
+        (self.min + self.max) * 0.5
+    }
+
+    #[must_use]
+    pub fn longest_extend(&self) -> usize {
+        let diag = self.max - self.min;
+        if diag[0] >= diag[1] && diag[0] >= diag[2] {
+            return 0;
+        }
+        if diag[1] >= diag[0] && diag[1] >= diag[2] {
+            return 1;
+        }
+        2
+    }
+
     /// Determine if bounding box intersects with the ray
     /// using [Smits method](https://people.csail.mit.edu/amy/papers/box-jgt.pdf)
     #[allow(clippy::similar_names)]
+    #[must_use]
     pub fn has_intersection(&self, with: &Ray) -> bool {
         let (tmin, tmax) = if with.dir()[0] >= 0. {
             (

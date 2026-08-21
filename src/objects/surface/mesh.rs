@@ -1,12 +1,12 @@
 use crate::{
     math::{Point3, Ray, Vec3},
-    objects::{BoundingBox, TriangleSoup},
+    objects::acceleration::Bvh,
 };
 
 use super::Texel;
 
 /// struct to represent a triangle in 3D-Space
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Triangle {
     pub points: [Point3; 3],
     normals: [Vec3; 3],
@@ -116,40 +116,25 @@ impl Triangle {
 /// also contains a bounding box to speed up intersection tests
 #[derive(Debug)]
 pub(super) struct Mesh {
-    triangles: TriangleSoup,
-    bounding_box: BoundingBox,
+    triangles: Bvh,
 }
 
 impl Mesh {
     /// Create a new mesh
     pub fn new(triangles: Vec<Triangle>) -> Mesh {
-        let bounding_box = BoundingBox::from(
-            &triangles
-                .iter()
-                .flat_map(|tri| tri.points)
-                .collect::<Vec<_>>(),
-        );
         Mesh {
-            triangles: TriangleSoup::new(triangles),
-            bounding_box,
+            triangles: Bvh::new(triangles),
         }
     }
 
     /// Test if the mesh intersects with the ray
     pub fn has_intersection(&self, with: &Ray) -> bool {
-        if self.bounding_box.has_intersection(with) {
-            self.triangles.has_intersection(with)
-        } else {
-            false
-        }
+        self.triangles.has_intersection(with)
     }
 
     /// Calculates the intersection of the mesh and the `with` Ray if present
     /// Returns `None` if there is no intersection
     pub fn intersection(&self, with: &Ray) -> Option<(f32, Vec3, Texel)> {
-        if !self.bounding_box.has_intersection(with) {
-            return None;
-        }
         self.triangles.intersection(with)
     }
 }

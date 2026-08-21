@@ -139,6 +139,17 @@ impl ops::Index<usize> for Vec3 {
     }
 }
 
+impl ops::IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
+            _ => panic!("Out of bounds access"),
+        }
+    }
+}
+
 // --- Operators ---
 
 impl ops::Add for Vec3 {
